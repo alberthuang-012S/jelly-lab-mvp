@@ -236,6 +236,16 @@
 
 .battle-item-icon .battle-item-visual {
   --visual-scale: 0.36;
+  justify-self: center;
+  align-self: center;
+  margin: 0;
+}
+
+.battle-item-icon {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  min-width: 0;
+  min-height: 0;
 }
 
 .battle-item-icon .battle-item-visual span {

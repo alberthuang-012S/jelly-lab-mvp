@@ -112,6 +112,12 @@ https://<GitHub帳號>.github.io/<repository名稱>/?debug=1
 - 膠囊統一為 78×40px；只保留膠囊本體旋轉，不使用個別商品的水平位移補丁。
 - 桌面使用等寬 Grid，手機 320／375／390／430px 皆限制為單欄且不產生橫向捲動。
 
+### Battle Screen UI 修正
+
+- Battle Screen 的 KTT、PNN、QCC、RNN、PPT、NAP 都使用同一個 Icon Frame 置中規則。
+- 修正原本 38px Icon 欄位被 Visual 原始 layout box 撐開，導致膠囊／罐裝圖示偏移並壓到名稱的問題。
+- Visual 會在 Frame 內水平、垂直置中，名稱／Damage 與使用按鈕維持獨立欄位；不修改戰鬥數值、庫存扣除或 Action Lock。
+
 ## Save Migration 做法
 
 `GAME_CONFIG.version` 目前為 `3`。`storage.js` 讀取既有 `jellyLabSave` 後交由 `normalizeSave()` 正規化：
@@ -190,3 +196,6 @@ Battle 中的 HP、Boss HP、狀態、回合、Battle Log 都只存在 `battle.j
 | V2.2 TEST 7：四張膠囊卡桌面等寬、中心 Y／水平軸一致 | 通過；寬螢幕卡片寬度約 298.8px |
 | V2.2 TEST 8：PPT／NAP Visual 與效果文字置中 | 通過；與膠囊使用同一固定 Visual Wrapper |
 | V2.2 TEST 9：320／375／390／430px 無橫向 Scroll | 通過；四種寬度均 `pageFits = true`，六張卡均在視窗內 |
+| Battle Screen：KTT／PNN／QCC／RNN／PPT／NAP Visual 與 Icon Frame 中心對齊 | 通過；桌面與 320px Visual 中心誤差約 0px |
+| Battle Screen：Visual 不覆蓋名稱／Damage，使用按鈕仍可開啟 Action Panel | 通過；430px 實際點擊 KTT「選擇」並取消 |
+| Battle Screen：320／375／390／430px 無橫向 Scroll | 通過；各寬度卡片與按鈕均在可視範圍內 |

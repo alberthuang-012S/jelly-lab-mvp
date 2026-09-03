@@ -482,7 +482,7 @@ function renderBattlePrep(save) {
   const hasItems = itemSummary.some((item) => item.quantity > 0);
   const progress = save.bossProgress.agingMonster;
   const recoveryName = getBattleItemDisplayName("recovery", "PPT+1");
-  const ointmentName = getBattleItemDisplayName("ointment", "NAP+1");
+  const ointmentName = getBattleItemDisplayName("ointment", "PPA+1");
 
   return `
     <div class="view-heading challenge-heading">
@@ -570,7 +570,7 @@ function renderBattleEffect(effect) {
 function renderBattleStatus(battle) {
   const { itchy, blurred } = battle.player.status;
   const suggestions = [];
-  if (itchy) suggestions.push(`建議使用 ${getBattleItemDisplayName("ointment", "NAP+1")}`);
+  if (itchy) suggestions.push(`建議使用 ${getBattleItemDisplayName("ointment", "PPA+1")}`);
   if (blurred) suggestions.push(`建議使用 ${getBattleItemDisplayName("recovery", "PPT+1")}`);
 
   return `

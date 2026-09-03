@@ -39,6 +39,24 @@ function renderTin(item, modifier) {
   `;
 }
 
+function renderBottle(item, modifier) {
+  const bodyColor = safeColor(item.bodyColor, "#fafaf7");
+  const pumpColor = safeColor(item.pumpColor, "#f0f1ee");
+  const labelColor = safeColor(item.labelColor, "#6c578d");
+  const labelAccent = safeColor(item.labelAccent, "#d9d0e8");
+
+  return `
+    <span class="battle-item-visual bottle-visual${modifier}" style="--bottle-body-color:${bodyColor};--bottle-pump-color:${pumpColor};--bottle-label-color:${labelColor};--bottle-label-accent:${labelAccent}" aria-hidden="true">
+      <span class="bottle-pump"><span class="bottle-nozzle"></span></span>
+      <span class="bottle-neck"></span>
+      <span class="bottle-body">
+        <span class="bottle-highlight"></span>
+        <span class="bottle-label"><strong>${item.name}</strong><small>清淨軟膏</small><i>✦</i></span>
+      </span>
+    </span>
+  `;
+}
+
 export function renderBattleItemVisual(item, options = {}) {
   const modifier = options.compact ? " is-compact" : "";
 
@@ -52,6 +70,10 @@ export function renderBattleItemVisual(item, options = {}) {
 
   if (item?.visualType === "tin") {
     return renderTin(item, modifier);
+  }
+
+  if (item?.visualType === "bottle") {
+    return renderBottle(item, modifier);
   }
 
   return `<span class="battle-item-visual fallback-item-visual${modifier}" aria-hidden="true">${item?.icon || "✦"}</span>`;

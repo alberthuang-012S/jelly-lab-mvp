@@ -461,16 +461,19 @@ export const BATTLE_SHOP_ITEMS = [
   {
     id: "ointment_nap",
     storageKey: "NAP",
-    name: "NAP+1",
+    name: "PPA+1",
     type: "ointment",
     category: "ointment",
-    icon: "🩹",
-    visualType: "tin",
-    color: "#C5C8CC",
+    icon: "🧴",
+    visualType: "bottle",
+    bodyColor: "#FAFAF7",
+    pumpColor: "#F0F1EE",
+    labelColor: "#6C578D",
+    labelAccent: "#D9D0E8",
     price: 300,
     cures: "itchy",
     consumable: true,
-    description: "舒緩搔癢狀態，不會恢復 HP。"
+    description: "PPA 外用藥膏，舒緩搔癢狀態，不會恢復 HP。"
   }
 ];
 

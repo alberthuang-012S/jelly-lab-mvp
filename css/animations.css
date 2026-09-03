@@ -1,0 +1,148 @@
+@keyframes jelly-float {
+  0%,
+  100% {
+    transform: translateY(0) scale(var(--stage-scale, 0.9));
+  }
+
+  50% {
+    transform: translateY(-7px) scale(var(--stage-scale, 0.9));
+  }
+}
+
+@keyframes jelly-pet {
+  0%,
+  100% {
+    transform: translateX(0) rotate(0deg) scale(var(--stage-scale, 0.9));
+  }
+
+  18% {
+    transform: translateX(-8px) rotate(-3deg) scale(var(--stage-scale, 0.9));
+  }
+
+  38% {
+    transform: translateX(8px) rotate(3deg) scale(var(--stage-scale, 0.9));
+  }
+
+  58% {
+    transform: translateX(-5px) rotate(-2deg) scale(var(--stage-scale, 0.9));
+  }
+
+  78% {
+    transform: translateX(4px) rotate(1deg) scale(var(--stage-scale, 0.9));
+  }
+}
+
+@keyframes jelly-chat {
+  0%,
+  100% {
+    transform: translateY(0) scale(var(--stage-scale, 0.9));
+  }
+
+  30% {
+    transform: translateY(-14px) scale(calc(var(--stage-scale, 0.9) + 0.03));
+  }
+
+  54% {
+    transform: translateY(0) scale(var(--stage-scale, 0.9));
+  }
+
+  70% {
+    transform: translateY(-6px) scale(var(--stage-scale, 0.9));
+  }
+}
+
+@keyframes jelly-feed {
+  0%,
+  100% {
+    transform: translateY(0) scale(var(--stage-scale, 0.9));
+  }
+
+  34% {
+    transform: translateY(-6px) scale(calc(var(--stage-scale, 0.9) + 0.08));
+  }
+
+  62% {
+    transform: translateY(0) scale(calc(var(--stage-scale, 0.9) - 0.02));
+  }
+}
+
+@keyframes view-enter {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toast-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.97);
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(13px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes star-twinkle {
+  from { opacity: 0.48; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1.04); }
+}
+
+.jelly-character.is-petting {
+  animation: jelly-pet 900ms ease both;
+}
+
+.jelly-character.is-chatting {
+  animation: jelly-chat 900ms ease both;
+}
+
+.jelly-character.is-feeding {
+  animation: jelly-feed 950ms ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

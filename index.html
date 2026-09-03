@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#effbff" />
+    <meta name="description" content="Jelly Lab 水母養成所 MVP Prototype" />
+    <title>水母養成所 · Jelly Lab</title>
+    <link rel="stylesheet" href="./css/main.css" />
+    <link rel="stylesheet" href="./css/animations.css" />
+    <link rel="stylesheet" href="./css/responsive.css" />
+    <link rel="stylesheet" href="./css/battle.css" />
+    <link rel="stylesheet" href="./css/v2-1.css" />
+  </head>
+  <body>
+    <div class="app-background" aria-hidden="true">
+      <span class="background-orb orb-one"></span>
+      <span class="background-orb orb-two"></span>
+      <span class="background-orb orb-three"></span>
+    </div>
+
+    <main id="app" class="app-shell">
+      <section id="onboarding" class="onboarding-screen" aria-labelledby="welcome-title">
+        <div class="onboarding-copy">
+          <div class="brand-lockup"><span class="brand-mark">◎</span><span><strong>JELLY LAB</strong><small>水母養成所</small></span></div>
+          <span class="eyebrow">A LITTLE OCEAN, JUST FOR YOU</span>
+          <h1 id="welcome-title">歡迎來到<br /><em>水母養成所</em></h1>
+          <p class="welcome-lede">在清澈的海裡，陪一隻水母慢慢長大。每天來看牠一下，讓你們的故事從今天開始。</p>
+
+          <div id="onboarding-step-name" class="onboarding-step">
+            <span class="onboarding-step-label">STEP 2 · NAMING</span>
+            <form id="onboarding-form" class="name-form" novalidate>
+              <label for="name-input">幫你的水母取個名字吧</label>
+              <div class="name-input-wrap"><input id="name-input" name="name" type="text" maxlength="20" autocomplete="off" placeholder="例如：小果凍" aria-describedby="name-hint name-error" /><span>✦</span></div>
+              <p id="name-hint" class="field-hint">1～10 個中文字，或 1～20 個英數字元</p>
+              <p id="name-error" class="field-error" role="alert"></p>
+              <button class="start-button" type="submit"><span>下一步：選擇顏色</span><span>→</span></button>
+            </form>
+          </div>
+
+          <div id="onboarding-step-color" class="onboarding-step color-step" hidden>
+            <span class="onboarding-step-label">STEP 3 · FIRST COLOR</span>
+            <h2>選擇你的初始水母顏色</h2>
+            <p id="onboarding-name-summary" class="onboarding-name-summary"></p>
+            <p class="color-step-hint">顏色免費，之後也能獨立搭配水母造型。</p>
+            <p id="onboarding-selected-color" class="selected-color-label"></p>
+            <div id="onboarding-color-options" class="onboarding-color-options" role="group" aria-label="初始水母顏色"></div>
+            <div class="onboarding-step-actions">
+              <button class="outline-button" type="button" data-action="onboarding-back">返回修改名字</button>
+              <button class="start-button" type="button" data-action="onboarding-start"><span>開始養成</span><span>→</span></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="onboarding-art" aria-label="黃色普通水母預覽">
+          <div class="welcome-aura"></div>
+          <span class="art-label label-top">YOUR FIRST COMPANION</span>
+          <div id="onboarding-character" class="welcome-character" aria-label="奶油黃水母預覽"></div>
+          <span class="art-label label-bottom">平凡水母 · STAGE 01</span>
+          <span class="art-bubble bubble-one"></span><span class="art-bubble bubble-two"></span><span class="art-bubble bubble-three"></span>
+        </div>
+      </section>
+
+      <section id="game-shell" class="game-shell" hidden>
+        <header class="topbar">
+          <button class="brand-lockup brand-button" data-action="view" data-view="home" aria-label="回到養成首頁"><span class="brand-mark">◎</span><span><strong>JELLY LAB</strong><small>水母養成所</small></span></button>
+          <div class="topbar-right"><span id="header-jelly-name" class="header-name"></span><div class="points-pill"><span>✦</span><strong id="header-points">0</strong><small>養成點</small></div></div>
+        </header>
+
+        <div class="app-layout">
+          <nav class="side-nav" aria-label="主要導覽">
+            <span class="nav-caption">MY LAB</span>
+            <button data-action="view" data-view="home" data-nav-view="home"><span class="nav-icon">⌂</span><span>養成</span></button>
+            <button data-action="view" data-view="shop" data-nav-view="shop"><span class="nav-icon">✦</span><span>商店</span></button>
+            <button data-action="view" data-view="challenge" data-nav-view="challenge"><span class="nav-icon">⚔️</span><span>挑戰</span></button>
+            <button data-action="view" data-view="inventory" data-nav-view="inventory"><span class="nav-icon">▱</span><span>背包</span></button>
+            <button data-action="view" data-view="collection" data-nav-view="collection"><span class="nav-icon">▤</span><span>圖鑑</span></button>
+            <div class="nav-footer"><span class="nav-footer-dot"></span><span>同步於本機</span></div>
+          </nav>
+
+          <section id="main-content" class="main-content">
+            <section id="view-home" class="view" aria-label="養成首頁"></section>
+            <section id="view-shop" class="view" aria-label="養成商店" hidden></section>
+            <section id="view-challenge" class="view" aria-label="BOSS 挑戰" hidden></section>
+            <section id="view-inventory" class="view" aria-label="我的背包" hidden></section>
+            <section id="view-collection" class="view" aria-label="水母圖鑑" hidden></section>
+          </section>
+        </div>
+
+        <nav class="bottom-nav" aria-label="行動版主要導覽">
+          <button data-action="view" data-view="home" data-nav-view="home"><span class="nav-icon">⌂</span><span>養成</span></button>
+          <button data-action="view" data-view="shop" data-nav-view="shop"><span class="nav-icon">✦</span><span>商店</span></button>
+          <button data-action="view" data-view="challenge" data-nav-view="challenge"><span class="nav-icon">⚔️</span><span>挑戰</span></button>
+          <button data-action="view" data-view="inventory" data-nav-view="inventory"><span class="nav-icon">▱</span><span>背包</span></button>
+          <button data-action="view" data-view="collection" data-nav-view="collection"><span class="nav-icon">▤</span><span>圖鑑</span></button>
+        </nav>
+      </section>
+
+      <aside id="debug-panel" class="debug-panel" hidden aria-label="Debug Mode"></aside>
+      <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+      <div id="modal-root"></div>
+    </main>
+
+    <noscript><div class="noscript-message">請開啟 JavaScript，才能進入水母養成所。</div></noscript>
+    <script type="module" src="./js/app.js"></script>
+  </body>
+</html>

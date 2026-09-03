@@ -1,6 +1,6 @@
-# 水母養成所 Jelly Lab V2.4
+# 水母養成所 Jelly Lab V2.5
 
-Jelly Lab V2.4 是在既有養成與 BOSS 挑戰 MVP 上的小幅資料顯示更新。延續共用戰鬥商品 Visual、批量購買／使用與水母顏色選擇，這版將戰鬥用品改為新的顯示名稱，並保留舊存檔的物品 ID 與保存鍵。專案仍使用 HTML5、CSS3、Vanilla JavaScript 與 `localStorage`，不需要後端、帳號或 npm 依賴即可遊玩。
+Jelly Lab V2.5 是在既有養成與 BOSS 挑戰 MVP 上新增的多配件裝備更新。延續共用戰鬥商品 Visual、批量購買／使用與水母顏色選擇，這版讓水母最多同時裝備四個不同槽位的配件，並保留舊存檔的養成、戰鬥與物品資料。專案仍使用 HTML5、CSS3、Vanilla JavaScript 與 `localStorage`，不需要後端、帳號或 npm 依賴即可遊玩。
 
 ## 啟動方式
 
@@ -51,7 +51,7 @@ https://<GitHub帳號>.github.io/<repository名稱>/?debug=1
    ├─ app.js                  # 應用入口、事件路由、畫面切換與 Battle orchestration
    ├─ config.js               # 商品、等級、進化、Boss、攻擊、戰鬥商品與獎勵設定
    ├─ state.js                # Save 結構、版本正規化、數值防呆與物品數量
-   ├─ storage.js              # localStorage 讀寫、V1/V2→V3 migration 與清除
+   ├─ storage.js              # localStorage 讀寫、V1/V2/V3→V4 migration 與清除
    ├─ battle.js               # 純記憶體回合制 Battle Engine 與批量行動
    ├─ components.js           # 共用戰鬥商品 Visual Component
    ├─ shop.js                 # 養成商店、戰鬥商店、批量購買與點數檢查
@@ -134,17 +134,27 @@ https://<GitHub帳號>.github.io/<repository名稱>/?debug=1
 - 修正原本 38px Icon 欄位被 Visual 原始 layout box 撐開，導致膠囊／罐裝圖示偏移並壓到名稱的問題。
 - Visual 會在 Frame 內水平、垂直置中，名稱／Damage 與使用按鈕維持獨立欄位；不修改戰鬥數值、庫存扣除或 Action Lock。
 
+### V2.5 多配件裝備
+
+- Save 版本提升至 `version: 4`，不會因版本更新強制清除既有 localStorage。
+- 水母配件改為 `jellyfish.equippedAccessories` 陣列，最多同時裝備頭部、左側裝飾、臉部、右側裝飾四個槽位。
+- 舊存檔的 `jellyfish.equippedAccessory` 會自動轉入新陣列，原有配件與其他養成資料盡可能保留。
+- 同一槽位重新裝備時只替換該槽位，其他槽位不受影響；背包可直接切換「裝備／卸下」。
+- 家中主角、戰鬥畫面與角色輔助文字會同步顯示目前多件配件；造型商店與圖鑑預覽仍維持獨立預覽，不會誤帶入玩家裝備。
+- 配件加入頭部、左側、臉部、右側的集中槽位設定，視覺位置由 `css/main.css` 統一管理。
+
 ## Save Migration 做法
 
-`GAME_CONFIG.version` 目前為 `3`。`storage.js` 讀取既有 `jellyLabSave` 後交由 `normalizeSave()` 正規化：
+`GAME_CONFIG.version` 目前為 `4`。`storage.js` 讀取既有 `jellyLabSave` 後交由 `normalizeSave()` 正規化：
 
 1. 保留舊玩家的 points、LV、EXP、親密度、裝備、背包、圖鑑與每日資料。
 2. 缺少的 `jellyfish.baseColor` 自動補為 `yellow`，保留原本 `equippedSkin`。
 3. 缺少的 `inventory.battleItems` 補成 KTT、PNN、QCC、RNN、PPT、NAP 六個數量欄位，初始皆為 0；既有數量完整保留。
 4. 缺少的 `bossProgress.agingMonster` 補上 `defeated`、`clearCount`、`rewardClaimed`。
 5. 缺少的 `rewards.coupons` 補成空陣列，既有 Coupon 完整保留並去除重複 ID。
-6. 版本不是 3 或缺少 V2.1 欄位時，將正規化結果回寫 localStorage；不會因升級主動清除舊存檔。
-7. 新建立的 Save 與 Reset Save 走 `createDefaultSave()`，使用 50,000 點並保存選定的 `baseColor`；既有 Save 的 points 不會被自動改寫。
+6. 缺少 `jellyfish.equippedAccessories` 時，若存在舊的單一 `equippedAccessory` 就轉成一件配件陣列；同槽位重複資料會正規化為一件，且只保留玩家實際擁有的配件。
+7. 版本不是 4 或缺少多配件欄位時，將正規化結果回寫 localStorage；不會因升級主動清除舊存檔。
+8. 新建立的 Save 與 Reset Save 走 `createDefaultSave()`，使用 50,000 點並保存選定的 `baseColor`；既有 Save 的 points 不會被自動改寫。
 
 Battle 中的 HP、Boss HP、狀態、回合、Battle Log 都只存在 `battle.js` 的記憶體狀態，離開或 Refresh 即結束該場戰鬥，不會污染養成系統資料。
 

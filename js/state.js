@@ -25,6 +25,26 @@ function uniqueKnownIds(values, knownItems) {
   return [...new Set(Array.isArray(values) ? values.filter((id) => knownIds.has(id)) : [])];
 }
 
+function normalizeEquippedAccessories(values, ownedAccessoryIds) {
+  const ownedIds = new Set(ownedAccessoryIds);
+  const usedSlots = new Set();
+
+  return uniqueKnownIds(values, ACCESSORIES).filter((accessoryId) => {
+    if (!ownedIds.has(accessoryId)) {
+      return false;
+    }
+
+    const slot = ACCESSORIES.find((accessory) => accessory.id === accessoryId)?.slot;
+
+    if (!slot || usedSlots.has(slot)) {
+      return false;
+    }
+
+    usedSlots.add(slot);
+    return true;
+  });
+}
+
 function battleStorageKey(itemOrId) {
   const item = typeof itemOrId === "string" ? BATTLE_SHOP_ITEMS.find((candidate) => candidate.id === itemOrId || candidate.storageKey === itemOrId) : itemOrId;
   return item?.storageKey || item?.id || String(itemOrId);
@@ -107,7 +127,7 @@ export function createDefaultSave(name, baseColor = GAME_CONFIG.initialBaseColor
       exp: 0,
       intimacy: 0,
       equippedSkin: GAME_CONFIG.initialSkin,
-      equippedAccessory: null,
+      equippedAccessories: [],
       equippedScene: GAME_CONFIG.initialScene
     },
     daily: {
@@ -189,7 +209,10 @@ export function normalizeSave(raw) {
   const name = typeof sourceJellyfish.name === "string" ? sourceJellyfish.name.trim() : "";
   const baseColor = normalizeBaseColor(sourceJellyfish.baseColor);
   const equippedSkin = skinIds.includes(sourceJellyfish.equippedSkin) ? sourceJellyfish.equippedSkin : GAME_CONFIG.initialSkin;
-  const equippedAccessory = accessories.includes(sourceJellyfish.equippedAccessory) ? sourceJellyfish.equippedAccessory : null;
+  const sourceEquippedAccessories = Array.isArray(sourceJellyfish.equippedAccessories)
+    ? sourceJellyfish.equippedAccessories
+    : sourceJellyfish.equippedAccessory ? [sourceJellyfish.equippedAccessory] : [];
+  const equippedAccessories = normalizeEquippedAccessories(sourceEquippedAccessories, accessories);
   const equippedScene = scenes.includes(sourceJellyfish.equippedScene) ? sourceJellyfish.equippedScene : GAME_CONFIG.initialScene;
 
   return {
@@ -206,7 +229,7 @@ export function normalizeSave(raw) {
       exp: level >= GAME_CONFIG.maxLevel ? 0 : nonNegativeInteger(sourceJellyfish.exp),
       intimacy: nonNegativeInteger(sourceJellyfish.intimacy),
       equippedSkin,
-      equippedAccessory,
+      equippedAccessories,
       equippedScene
     },
     daily: {
@@ -447,12 +470,40 @@ export function equipSkin(save, skinId) {
   return true;
 }
 
+export function getEquippedAccessories(save) {
+  if (Array.isArray(save?.jellyfish?.equippedAccessories)) {
+    return [...save.jellyfish.equippedAccessories];
+  }
+
+  return save?.jellyfish?.equippedAccessory ? [save.jellyfish.equippedAccessory] : [];
+}
+
 export function equipAccessory(save, accessoryId) {
-  if (accessoryId !== null && !save.inventory.accessories.includes(accessoryId)) {
+  const accessory = ACCESSORIES.find((item) => item.id === accessoryId);
+
+  if (!accessory || !save.inventory.accessories.includes(accessoryId)) {
+    return { ok: false, replacedId: null };
+  }
+
+  const equippedAccessories = getEquippedAccessories(save);
+  const replacedId = equippedAccessories.find((equippedId) => ACCESSORIES.find((item) => item.id === equippedId)?.slot === accessory.slot) || null;
+
+  save.jellyfish.equippedAccessories = [
+    ...equippedAccessories.filter((equippedId) => equippedId !== accessoryId && equippedId !== replacedId),
+    accessoryId
+  ];
+
+  return { ok: true, replacedId };
+}
+
+export function unequipAccessory(save, accessoryId) {
+  const equippedAccessories = getEquippedAccessories(save);
+
+  if (!equippedAccessories.includes(accessoryId)) {
     return false;
   }
 
-  save.jellyfish.equippedAccessory = accessoryId;
+  save.jellyfish.equippedAccessories = equippedAccessories.filter((equippedId) => equippedId !== accessoryId);
   return true;
 }
 

@@ -27,8 +27,10 @@ import {
   equipSkin,
   forceNextDay,
   getCurrentStage,
+  getEquippedAccessories,
   getFoodQuantity,
-  petJellyfish
+  petJellyfish,
+  unequipAccessory
 } from "./state.js";
 import {
   beginPlayerAction,
@@ -377,9 +379,44 @@ function handlePurchase(item, requestedQuantity = QUANTITY_CONFIG.default) {
 function handleEquip(itemId, type) {
   if (!save) return;
 
+  const item = findItem(itemId);
+
+  if (type === "accessory") {
+    const isEquipped = getEquippedAccessories(save).includes(itemId);
+
+    if (isEquipped) {
+      if (!unequipAccessory(save, itemId)) {
+        showToast("這件配件目前沒有裝備。", "warning");
+        return;
+      }
+
+      persist();
+      renderApp();
+      animateAvatar("is-chatting");
+      showToast(`已卸下 ${item?.name || "配件"}`, "success");
+      trackEvent("unequip_accessory", { itemId });
+      return;
+    }
+
+    const result = equipAccessory(save, itemId);
+
+    if (!result.ok) {
+      showToast("這件物品還不在你的背包裡。", "warning");
+      return;
+    }
+
+    persist();
+    renderApp();
+    animateAvatar("is-chatting");
+
+    const replacedItem = result.replacedId ? findItem(result.replacedId) : null;
+    showToast(replacedItem ? `已裝備 ${item?.name || "配件"}，替換 ${replacedItem.name}` : `已裝備 ${item?.name || "配件"}`, "success");
+    trackEvent("equip_accessory", { itemId, replacedId: result.replacedId });
+    return;
+  }
+
   let equipped = false;
   if (type === "skin") equipped = equipSkin(save, itemId);
-  if (type === "accessory") equipped = equipAccessory(save, itemId);
   if (type === "scene") equipped = equipScene(save, itemId);
 
   if (!equipped) {
@@ -390,7 +427,7 @@ function handleEquip(itemId, type) {
   persist();
   renderApp();
   animateAvatar("is-chatting");
-  showToast(`已裝備 ${findItem(itemId)?.name || "新物品"}`, "success");
+  showToast(`已裝備 ${item?.name || "新物品"}`, "success");
   trackEvent(type === "skin" ? "equip_skin" : `equip_${type}`, { itemId });
 }
 

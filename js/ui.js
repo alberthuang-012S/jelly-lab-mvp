@@ -1,4 +1,5 @@
 import {
+  ACCESSORY_SLOTS,
   BATTLE_CONFIG,
   BATTLE_SHOP_GROUPS,
   BATTLE_SHOP_ITEMS,
@@ -394,21 +395,23 @@ function renderInventoryVisual(save, item, category) {
 function renderInventoryCard(save, item, category) {
   const quantity = category === "food" ? getFoodQuantity(save, item.id) : category === "battle" ? getBattleItemQuantity(save, item) : null;
   const equipped = isEquipped(save, item);
+  const isAccessory = category === "accessory";
   const action = category === "food" ? "feed" : category === "battle" ? "go-challenge" : category === "skin" ? "equip-skin" : category === "accessory" ? "equip-accessory" : "equip-scene";
-  const buttonLabel = category === "food" ? "餵食" : category === "battle" ? "前往挑戰" : equipped ? "使用中" : "裝備";
+  const buttonLabel = category === "food" ? "餵食" : category === "battle" ? "前往挑戰" : isAccessory ? equipped ? "卸下" : "裝備" : equipped ? "使用中" : "裝備";
+  const accessorySlot = isAccessory ? ACCESSORY_SLOTS[item.slot] : null;
   const itemDescription = category === "food"
     ? `EXP +${item.exp} · ${item.description}`
     : category === "battle"
       ? item.type === "weapon" ? `傷害 ${item.damage} · ${item.description}` : item.type === "recovery" ? `HP +${item.heal} · ${item.description}` : item.description
-      : item.description;
+      : accessorySlot ? `${accessorySlot.label} · ${item.description}` : item.description;
 
   return `
     <article class="inventory-card ${equipped ? "is-equipped" : ""} ${category === "battle" ? "is-battle-inventory" : ""}">
       ${renderInventoryVisual(save, item, category)}
       <div class="inventory-copy"><h3>${item.icon && category !== "skin" && category !== "scene" && category !== "battle" ? `${item.icon} ` : ""}${item.name}</h3><p>${itemDescription}</p></div>
       <div class="inventory-actions">
-        ${category === "food" || category === "battle" ? `<span class="quantity-badge">×${quantity}</span>` : equipped ? `<span class="equipped-label">✓ 使用中</span>` : ""}
-        <button class="small-action ${equipped ? "is-selected" : ""}" data-action="${action}" data-id="${item.id}" ${equipped ? "disabled" : ""}>${buttonLabel}</button>
+        ${category === "food" || category === "battle" ? `<span class="quantity-badge">×${quantity}</span>` : equipped ? `<span class="equipped-label">${isAccessory ? "✓ 已裝備" : "✓ 使用中"}</span>` : ""}
+        <button class="small-action ${equipped ? "is-selected" : ""}" data-action="${action}" data-id="${item.id}" ${equipped && !isAccessory ? "disabled" : ""}>${buttonLabel}</button>
       </div>
     </article>
   `;

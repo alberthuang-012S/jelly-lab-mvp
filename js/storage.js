@@ -26,6 +26,7 @@ export function loadSave() {
     const didReset = applyDailyReset(save);
     const needsMigration = parsed.version !== GAME_CONFIG.version
       || !parsed.jellyfish?.baseColor
+      || !Array.isArray(parsed.jellyfish?.equippedAccessories)
       || !parsed.inventory?.battleItems
       || !parsed.bossProgress
       || !parsed.rewards;

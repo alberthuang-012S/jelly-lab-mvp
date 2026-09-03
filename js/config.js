@@ -1,5 +1,5 @@
 export const GAME_CONFIG = {
-  version: 3,
+  version: 4,
   saveKey: "jellyLabSave",
   startingPoints: 50000,
   maxLevel: 10,
@@ -215,10 +215,18 @@ export const SKINS = [
   }
 ];
 
+export const ACCESSORY_SLOTS = {
+  head: { label: "頭部", order: 1 },
+  left: { label: "左側裝飾", order: 2 },
+  face: { label: "臉部", order: 3 },
+  right: { label: "右側裝飾", order: 4 }
+};
+
 export const ACCESSORIES = [
   {
     id: "accessory_crown",
     type: "accessory",
+    slot: "head",
     name: "海洋皇冠",
     icon: "👑",
     price: 180,
@@ -228,6 +236,7 @@ export const ACCESSORIES = [
   {
     id: "accessory_bow",
     type: "accessory",
+    slot: "left",
     name: "珊瑚蝴蝶結",
     icon: "🎀",
     price: 160,
@@ -237,6 +246,7 @@ export const ACCESSORIES = [
   {
     id: "accessory_glasses",
     type: "accessory",
+    slot: "face",
     name: "研究眼鏡",
     icon: "🕶️",
     price: 220,
@@ -246,6 +256,7 @@ export const ACCESSORIES = [
   {
     id: "accessory_star",
     type: "accessory",
+    slot: "right",
     name: "星星髮飾",
     icon: "⭐",
     price: 260,
@@ -255,6 +266,7 @@ export const ACCESSORIES = [
   {
     id: "accessory_hat",
     type: "accessory",
+    slot: "head",
     name: "小小船長帽",
     icon: "🧢",
     price: 300,

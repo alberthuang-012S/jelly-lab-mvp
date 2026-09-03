@@ -1,5 +1,5 @@
 import { ACCESSORIES, BATTLE_SHOP_ITEMS, FOODS, QUANTITY_CONFIG, SCENES, SKINS } from "./config.js";
-import { addBattleItem, addFood, spendPoints } from "./state.js";
+import { addBattleItem, addFood, getEquippedAccessories, spendPoints } from "./state.js";
 
 export function getShopItems(category) {
   if (category === "food") {
@@ -47,7 +47,7 @@ export function isRepeatableItem(item) {
 
 export function isEquipped(save, item) {
   if (item.type === "skin") return save.jellyfish.equippedSkin === item.id;
-  if (item.type === "accessory") return save.jellyfish.equippedAccessory === item.id;
+  if (item.type === "accessory") return getEquippedAccessories(save).includes(item.id);
   if (item.type === "scene") return save.jellyfish.equippedScene === item.id;
   return false;
 }
@@ -60,7 +60,8 @@ export function getItemStatus(save, item) {
   }
 
   if (isOwned(save, item)) {
-    return { kind: isEquipped(save, item) ? "equipped" : "owned", label: isEquipped(save, item) ? "✓ 使用中" : "已擁有" };
+    const equipped = isEquipped(save, item);
+    return { kind: equipped ? "equipped" : "owned", label: equipped ? item.type === "accessory" ? "✓ 已裝備" : "✓ 使用中" : "已擁有" };
   }
 
   if (save.player.points < item.price) {

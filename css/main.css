@@ -717,12 +717,37 @@ button:disabled {
 .jelly-accessory {
   position: absolute;
   z-index: 3;
-  top: 2%;
-  left: 50%;
-  font-size: clamp(1.65rem, 7vw, 2.6rem);
+  pointer-events: none;
   line-height: 1;
-  transform: translateX(-50%) rotate(-6deg);
+  white-space: nowrap;
+  font-size: clamp(1.65rem, 7vw, 2.6rem);
   filter: drop-shadow(0 4px 4px rgba(28, 43, 69, 0.13));
+}
+
+.jelly-accessory[data-accessory-slot="head"] {
+  top: 3%;
+  left: 50%;
+  transform: translate(-50%, -34%) rotate(-6deg);
+}
+
+.jelly-accessory[data-accessory-slot="left"] {
+  top: 32%;
+  left: 13%;
+  transform: translate(-50%, -50%) rotate(-14deg);
+}
+
+.jelly-accessory[data-accessory-slot="face"] {
+  top: 37%;
+  left: 50%;
+  font-size: clamp(1.35rem, 6vw, 2.25rem);
+  transform: translate(-50%, -50%) rotate(-6deg);
+}
+
+.jelly-accessory[data-accessory-slot="right"] {
+  top: 13%;
+  left: 85%;
+  font-size: clamp(1.15rem, 5vw, 2rem);
+  transform: translate(-50%, -50%) rotate(8deg);
 }
 
 .jelly-shine {

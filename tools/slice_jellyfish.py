@@ -92,6 +92,36 @@ def prepare_tile(image: Image.Image, column: int, row: int) -> Image.Image:
             if touches_edge:
                 for component_y, component_x in component:
                     rgba[component_y, component_x, 3] = 0
+
+        if column == 3 and row == 0 and any(x <= 3 for _, x in component):
+            component_pixels = rgba[
+                [component_y for component_y, _ in component],
+                [component_x for _, component_x in component],
+                :3,
+            ].astype(np.int16)
+            component_red = component_pixels[:, 0]
+            component_green = component_pixels[:, 1]
+            component_blue = component_pixels[:, 2]
+            green_ratio = np.mean(
+                (component_green > 90)
+                & (component_green > component_red * 1.15)
+                & (component_green > component_blue * 1.05)
+            )
+            if green_ratio > 0.2:
+                for component_y, component_x in component:
+                    rgba[component_y, component_x, 3] = 0
+
+    # The angry jellyfish tile also contains a green fragment from the
+    # neighbouring source artwork. It is outside the character silhouette and
+    # should never be carried into the standalone skin asset.
+    if column == 3 and row == 0:
+        red = rgba[:, :, 0].astype(np.int16)
+        green = rgba[:, :, 1].astype(np.int16)
+        blue = rgba[:, :, 2].astype(np.int16)
+        green_fragment = (green > 90) & (green > red * 1.15) & (green > blue * 1.05)
+        green_fragment[:, int(width * 0.24):] = False
+        rgba[green_fragment, 3] = 0
+
     cleaned = Image.fromarray(rgba, mode="RGBA")
 
     bbox = cleaned.getchannel("A").getbbox()

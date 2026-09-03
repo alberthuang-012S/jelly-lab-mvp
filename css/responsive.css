@@ -187,7 +187,7 @@
   }
 
   .collection-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 16px;
   }
 }
@@ -327,12 +327,13 @@
   }
 
   .collection-art {
-    height: 112px;
+    height: 126px;
   }
 
   .collection-art .jelly-character {
-    width: 110px;
-    height: 110px;
+    width: min(126px, 82%);
+    height: min(126px, 82%);
+    --stage-scale: 0.84;
   }
 
   .collection-copy {

@@ -639,7 +639,7 @@ function renderCollectionCard(save, skin) {
   const current = save.jellyfish.equippedSkin === skin.id;
   return `
     <article class="collection-card ${collected ? "is-collected" : "is-locked"} ${current ? "is-current" : ""}">
-      <div class="collection-art ${collected ? "" : "locked-art"}">${renderJellyfish(save, { skinId: skin.id, accessoryId: null, actionClass: "preview-character" })}${!collected ? "<span class=lock-overlay>🔒</span>" : ""}</div>
+      <div class="collection-art skin-art-${skin.id} ${collected ? "" : "locked-art"}" style="--collection-accent:${skin.accent}">${renderJellyfish(save, { skinId: skin.id, accessoryId: null, actionClass: "preview-character" })}${!collected ? "<span class=lock-overlay>🔒</span>" : ""}</div>
       <div class="collection-copy"><span class="collection-index">${String(skin.id === "normal" ? 1 : skin.requiredLevel).padStart(2, "0")}</span><h3>${collected ? skin.name : "???"}</h3><p>${collected ? skin.description : `達到 LV${skin.requiredLevel} 後可購買`}</p></div>
       <span class="collection-state">${current ? "✓ 使用中" : collected ? "✓ 已收集" : "尚未發現"}</span>
     </article>

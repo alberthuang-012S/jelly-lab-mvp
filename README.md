@@ -1,6 +1,6 @@
-# 水母養成所 Jelly Lab V2.2
+# 水母養成所 Jelly Lab V2.3
 
-Jelly Lab V2.2 是在既有養成與 BOSS 挑戰 MVP 上的小幅增量更新。延續共用戰鬥商品 Visual、批量購買／使用與水母顏色選擇，調整新玩家初始點數與戰鬥商品卡的中心對齊。專案仍使用 HTML5、CSS3、Vanilla JavaScript 與 `localStorage`，不需要後端、帳號或 npm 依賴即可遊玩。
+Jelly Lab V2.3 是在既有養成與 BOSS 挑戰 MVP 上的小幅視覺增量更新。延續共用戰鬥商品 Visual、批量購買／使用與水母顏色選擇，這版調整水母圖鑑與造型商店的角色比例、卡片欄數、配色光圈，並清理爆氣水母素材的跨格綠色殘片。專案仍使用 HTML5、CSS3、Vanilla JavaScript 與 `localStorage`，不需要後端、帳號或 npm 依賴即可遊玩。
 
 ## 啟動方式
 
@@ -112,6 +112,14 @@ https://<GitHub帳號>.github.io/<repository名稱>/?debug=1
 - 膠囊統一為 78×40px；只保留膠囊本體旋轉，不使用個別商品的水平位移補丁。
 - 桌面使用等寬 Grid，手機 320／375／390／430px 皆限制為單欄且不產生橫向捲動。
 
+### V2.3 造型視覺調整
+
+- 水母圖鑑桌面版改為三欄大卡片，讓角色圖與名稱更容易辨識。
+- 圖鑑卡片新增依 Skin accent 變化的柔和彩色光圈與底部光暈；鎖定狀態仍維持原本的模糊與鎖頭提示。
+- 造型商店預覽角色比例微調，與圖鑑的角色視覺尺度更一致。
+- 清理 `jelly-angry.png` 左側跨素材綠色殘片，並將清理規則保留在 `tools/slice_jellyfish.py`，方便之後重建素材。
+- 本版只涉及 UI／素材，不變更 Save 結構；`GAME_CONFIG.version` 維持 3，不需要額外 Migration。
+
 ### Battle Screen UI 修正
 
 - Battle Screen 的 KTT、PNN、QCC、RNN、PPT、NAP 都使用同一個 Icon Frame 置中規則。
@@ -199,3 +207,6 @@ Battle 中的 HP、Boss HP、狀態、回合、Battle Log 都只存在 `battle.j
 | Battle Screen：KTT／PNN／QCC／RNN／PPT／NAP Visual 與 Icon Frame 中心對齊 | 通過；桌面與 320px Visual 中心誤差約 0px |
 | Battle Screen：Visual 不覆蓋名稱／Damage，使用按鈕仍可開啟 Action Panel | 通過；430px 實際點擊 KTT「選擇」並取消 |
 | Battle Screen：320／375／390／430px 無橫向 Scroll | 通過；各寬度卡片與按鈕均在可視範圍內 |
+| V2.3：桌面圖鑑三欄、角色置中與 Skin 配色光圈 | 通過；1265px 實測三欄，角色與卡片中心對齊 |
+| V2.3：320／375／390／430px 圖鑑 Responsive | 通過；四種寬度均無橫向 Scroll，圖鑑改為雙欄 |
+| V2.3：爆氣水母素材清理 | 通過；512×512 PNG 左四分之一未再檢出異常綠色像素 |

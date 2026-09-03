@@ -125,6 +125,7 @@ https://<GitHub帳號>.github.io/<repository名稱>/?debug=1
 - KTT → **KTT+3**、PNN → **PNN+3**、QCC → **QCC+4**、RNN → **REE+5**。
 - PPT → **PTT+1**、NAP → **NAP+1**。
 - 為了相容既有玩家存檔，內部 `id` 與 `storageKey` 不變：RNN、PPT 等舊保存鍵仍照常讀寫，只更新所有商店、背包、準備畫面、Battle、提示與 Debug 的顯示名稱。
+- 商店分類順序調整為「⚔️ 戰鬥」第一個，方便直接進入戰鬥用品商店；其他食物、造型、配件、場景分類保留。
 - 本版不需清除 localStorage，也不需新增 Migration；`GAME_CONFIG.version` 維持 3。
 
 ### Battle Screen UI 修正

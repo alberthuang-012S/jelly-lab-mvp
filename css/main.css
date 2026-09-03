@@ -1319,6 +1319,10 @@ button:disabled {
   min-height: 178px;
 }
 
+.skin-preview::before {
+  display: none;
+}
+
 .skin-preview .jelly-character {
   width: min(176px, 72%);
   height: min(176px, 72%);

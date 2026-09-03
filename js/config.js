@@ -363,11 +363,11 @@ export const CHAT_LINES = [
 ];
 
 export const SHOP_CATEGORIES = [
+  { id: "battle", label: "⚔️ 戰鬥" },
   { id: "food", label: "🍰 食物" },
   { id: "skin", label: "🪼 造型" },
   { id: "accessory", label: "🎀 配件" },
-  { id: "scene", label: "🌊 場景" },
-  { id: "battle", label: "⚔️ 戰鬥" }
+  { id: "scene", label: "🌊 場景" }
 ];
 
 export const BATTLE_SHOP_ITEMS = [

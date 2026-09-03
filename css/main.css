@@ -1665,42 +1665,12 @@ button:disabled {
 }
 
 .collection-art {
-  --collection-accent: #55cfe0;
   position: relative;
   display: grid;
   height: 178px;
   place-items: center;
   overflow: hidden;
-  isolation: isolate;
   background: linear-gradient(145deg, rgba(222, 249, 251, 0.9), rgba(238, 231, 255, 0.9));
-}
-
-.collection-art::before {
-  position: absolute;
-  width: 124px;
-  height: 124px;
-  border: 1px solid color-mix(in srgb, var(--collection-accent), white 55%);
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--collection-accent), white 91%);
-  box-shadow: 0 13px 28px color-mix(in srgb, var(--collection-accent), transparent 78%);
-  content: "";
-  opacity: 0.82;
-}
-
-.collection-art::after {
-  position: absolute;
-  right: 12%;
-  bottom: -17px;
-  left: 12%;
-  height: 44px;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--collection-accent), transparent 86%);
-  content: "";
-  filter: blur(7px);
-}
-
-.collection-art .jelly-character {
-  z-index: 1;
 }
 
 .collection-art .jelly-character {

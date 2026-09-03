@@ -469,11 +469,17 @@ function renderBattleHpBar(current, max, label) {
   `;
 }
 
+function getBattleItemDisplayName(type, fallback) {
+  return BATTLE_SHOP_ITEMS.find((item) => item.type === type)?.name || fallback;
+}
+
 function renderBattlePrep(save) {
   const boss = getBossForDisplay();
   const itemSummary = getBattleInventorySummary(save);
   const hasItems = itemSummary.some((item) => item.quantity > 0);
   const progress = save.bossProgress.agingMonster;
+  const recoveryName = getBattleItemDisplayName("recovery", "PTT+1");
+  const ointmentName = getBattleItemDisplayName("ointment", "NAP+1");
 
   return `
     <div class="view-heading challenge-heading">
@@ -499,7 +505,7 @@ function renderBattlePrep(save) {
           `).join("")}
         </div>
         <p class="battle-prep-hint ${hasItems ? "" : "is-warning"}">${hasItems ? "戰鬥用品會在每次使用後消耗，記得依狀態做出選擇。" : "目前沒有攜帶戰鬥用品，挑戰難度會提高，但仍可使用免費的水母撞擊。"}</p>
-        <div class="battle-prep-tip">💡 老化怪獸可能造成癢與視野模糊，記得準備 NAP 與 PPT。</div>
+        <div class="battle-prep-tip">💡 老化怪獸可能造成癢與視野模糊，記得準備 ${ointmentName} 與 ${recoveryName}。</div>
         <div class="prep-actions"><button class="outline-button" data-action="go-battle-shop">前往戰鬥商店</button><button class="start-button battle-start-button" data-action="start-battle"><span>開始挑戰</span><span>→</span></button></div>
       </section>
     </div>
@@ -561,8 +567,8 @@ function renderBattleEffect(effect) {
 function renderBattleStatus(battle) {
   const { itchy, blurred } = battle.player.status;
   const suggestions = [];
-  if (itchy) suggestions.push("建議使用 NAP");
-  if (blurred) suggestions.push("建議使用 PPT");
+  if (itchy) suggestions.push(`建議使用 ${getBattleItemDisplayName("ointment", "NAP+1")}`);
+  if (blurred) suggestions.push(`建議使用 ${getBattleItemDisplayName("recovery", "PTT+1")}`);
 
   return `
     <section class="battle-status-card glass-card">

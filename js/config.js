@@ -374,7 +374,7 @@ export const BATTLE_SHOP_ITEMS = [
   {
     id: "weapon_ktt",
     storageKey: "KTT",
-    name: "KTT",
+    name: "KTT+3",
     type: "weapon",
     category: "weapon",
     icon: "🔵",
@@ -389,7 +389,7 @@ export const BATTLE_SHOP_ITEMS = [
   {
     id: "weapon_pnn",
     storageKey: "PNN",
-    name: "PNN",
+    name: "PNN+3",
     type: "weapon",
     category: "weapon",
     icon: "🟣",
@@ -404,7 +404,7 @@ export const BATTLE_SHOP_ITEMS = [
   {
     id: "weapon_qcc",
     storageKey: "QCC",
-    name: "QCC",
+    name: "QCC+4",
     type: "weapon",
     category: "weapon",
     icon: "🟠",
@@ -419,7 +419,7 @@ export const BATTLE_SHOP_ITEMS = [
   {
     id: "weapon_rnn",
     storageKey: "RNN",
-    name: "RNN",
+    name: "REE+5",
     type: "weapon",
     category: "weapon",
     icon: "🔴",
@@ -434,7 +434,7 @@ export const BATTLE_SHOP_ITEMS = [
   {
     id: "recovery_ppt",
     storageKey: "PPT",
-    name: "PPT",
+    name: "PTT+1",
     type: "recovery",
     category: "recovery",
     icon: "🧪",
@@ -449,7 +449,7 @@ export const BATTLE_SHOP_ITEMS = [
   {
     id: "ointment_nap",
     storageKey: "NAP",
-    name: "NAP",
+    name: "NAP+1",
     type: "ointment",
     category: "ointment",
     icon: "🩹",

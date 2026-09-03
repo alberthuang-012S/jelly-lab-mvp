@@ -441,7 +441,7 @@ function openBattleActionPanel(itemId) {
   const limits = getBattleActionQuantityLimits(battleState, save, item);
 
   if (!item || limits.max <= 0) {
-    showToast(item?.type === "recovery" ? "目前不能使用 PPT。" : item?.type === "ointment" ? "目前沒有癢狀態可解除。" : "目前沒有可使用的戰鬥用品。", "warning");
+    showToast(item?.type === "recovery" ? `目前不能使用 ${item.name}。` : item?.type === "ointment" ? "目前沒有癢狀態可解除。" : "目前沒有可使用的戰鬥用品。", "warning");
     return;
   }
 

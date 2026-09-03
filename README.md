@@ -1,6 +1,6 @@
-# 水母養成所 Jelly Lab V2.3
+# 水母養成所 Jelly Lab V2.4
 
-Jelly Lab V2.3 是在既有養成與 BOSS 挑戰 MVP 上的小幅視覺增量更新。延續共用戰鬥商品 Visual、批量購買／使用與水母顏色選擇，這版調整水母圖鑑與造型商店的角色比例、卡片欄數、配色光圈，並清理爆氣水母素材的跨格綠色殘片。專案仍使用 HTML5、CSS3、Vanilla JavaScript 與 `localStorage`，不需要後端、帳號或 npm 依賴即可遊玩。
+Jelly Lab V2.4 是在既有養成與 BOSS 挑戰 MVP 上的小幅資料顯示更新。延續共用戰鬥商品 Visual、批量購買／使用與水母顏色選擇，這版將戰鬥用品改為新的顯示名稱，並保留舊存檔的物品 ID 與保存鍵。專案仍使用 HTML5、CSS3、Vanilla JavaScript 與 `localStorage`，不需要後端、帳號或 npm 依賴即可遊玩。
 
 ## 啟動方式
 
@@ -53,7 +53,7 @@ https://<GitHub帳號>.github.io/<repository名稱>/?debug=1
    ├─ state.js                # Save 結構、版本正規化、數值防呆與物品數量
    ├─ storage.js              # localStorage 讀寫、V1/V2→V3 migration 與清除
    ├─ battle.js               # 純記憶體回合制 Battle Engine 與批量行動
-   ├─ components.js           # 共用 KTT/PPT/NAP 商品 Visual Component
+   ├─ components.js           # 共用戰鬥商品 Visual Component
    ├─ shop.js                 # 養成商店、戰鬥商店、批量購買與點數檢查
    ├─ inventory.js            # 食物、造型、配件、場景、戰鬥用品與獎勵資料
    ├─ jellyfish.js            # Skin、場景、配件與角色素材組裝
@@ -76,32 +76,32 @@ https://<GitHub帳號>.github.io/<repository名稱>/?debug=1
 - V2 Save `version` 為 `2`；V2.1 會升級至 `version: 3`，既有存檔不會被強制刪除。
 - 新增「⚔️ 挑戰」導覽與 BOSS 挑戰準備畫面。
 - 新增「⚔️ 戰鬥商店」Tab，保留原本食物、Skin、配件、場景。
-- 戰鬥商品：KTT、PNN、QCC、RNN、PPT、NAP，皆集中在 `config.js`。
+- 戰鬥商品顯示名稱：KTT+3、PNN+3、QCC+4、REE+5、PTT+1、NAP+1，皆集中在 `config.js`。
 - 戰鬥背包數量會立即保存，Refresh 後仍存在。
 - 第一隻 Boss「老化怪獸」：HP 320、衰老衝擊、乾癢粉塵、混濁視線。
 - 免費基本攻擊「水母撞擊」10 Damage，不需要任何膠囊即可挑戰。
 - 回合制流程、玩家回合鎖定、Boss 回合、勝利與戰敗 Modal。
-- 癢：每次玩家完成攻擊行動後受到 5 Damage，NAP 可解除。
-- 視野模糊：水母攻擊有 50% MISS 機率，PPT 可回血並解除。
-- PPT 回復最多 35 HP 且不超過 Max HP；滿血且沒有模糊時按鈕 Disable。
-- NAP 只有在癢狀態時可用，且不會回血。
+- 癢：每次玩家完成攻擊行動後受到 5 Damage，NAP+1 可解除。
+- 視野模糊：水母攻擊有 50% MISS 機率，PTT+1 可回血並解除。
+- PTT+1 回復最多 35 HP 且不超過 Max HP；滿血且沒有模糊時按鈕 Disable。
+- NAP+1 只有在癢狀態時可用，且不會回血。
 - Battle Log 最近保留 8 筆，含攻擊、受傷、狀態、治療與勝負紀錄。
 - CSS 傷害、回血、Boss Shake、水母受傷、狀態與視野 Fog 效果。
 - 首次擊敗獲得一次虛擬 NT$600 折價券，存於「我的獎勵」。不生成真正 Coupon Code。
 - 再次擊敗可累積通關次數，但不會重複加入折價券。
-- V2 Battle Debug：`+1 KTT`、`+1 PNN`、`+1 QCC`、`+1 RNN`、`+1 PPT`、`+1 NAP`、`Boss HP -50`、`Player HP -20`、`Apply Itchy`、`Apply Blurred`、`Clear Status`、`Reset Boss Reward`。
+- V2 Battle Debug：`+1 KTT+3`、`+1 PNN+3`、`+1 QCC+4`、`+1 REE+5`、`+1 PTT+1`、`+1 NAP+1`、`Boss HP -50`、`Player HP -20`、`Apply Itchy`、`Apply Blurred`、`Clear Status`、`Reset Boss Reward`。
 - 新增事件追蹤：`battle_shop_open`、`battle_item_purchase`、`boss_challenge_open`、`boss_battle_start`、`boss_attack`、`player_attack`、`battle_item_used`、狀態與勝負事件等，暫時只寫入 console 與記憶體事件陣列。
 
 ### V2.1 增量內容
 
 - KTT、PNN、QCC、RNN 統一使用 CSS Capsule Visual：雙半膠囊、中央接合線、高光與立體陰影。
-- PPT 使用咖啡色罐裝飲料 Visual；NAP 使用銀色扁圓金屬罐 Visual。
+- PTT+1 使用咖啡色罐裝飲料 Visual；NAP+1 使用銀色扁圓金屬罐 Visual。
 - `renderBattleItemVisual(item)` 位於 `components.js`，商店、背包、Battle 共用同一套商品視覺。
 - 戰鬥商店與食物商店的可重複消耗品支援數量選擇、直接輸入、`MAX`、即時總價與單次最多 99 個。
 - 點數不足時購買按鈕會 Disable，並顯示差額；批量購買只扣一次總價、只增加一次庫存。
-- Battle 中武器與 PPT 使用 Action Panel 選擇數量；批量攻擊只算一個玩家 Action，Boss 只行動一次。
+- Battle 中武器與 PTT+1 使用 Action Panel 選擇數量；批量攻擊只算一個玩家 Action，Boss 只行動一次。
 - 視野模糊時同一批武器只判定一次命中／Miss；Miss 仍完整消耗所有選定膠囊。
-- PPT 的可用數量會依缺少 HP 計算，滿血但 blurred 時最多 1 罐；NAP 戰鬥中固定一次 1 個。
+- PTT+1 的可用數量會依缺少 HP 計算，滿血但 blurred 時最多 1 罐；NAP+1 戰鬥中固定一次 1 個。
 - 新玩家建立流程增加 7 種免費初始顏色選擇，選色即時預覽，`baseColor` 與 `equippedSkin` 分開保存。
 - 舊玩家沒有 `baseColor` 時自動使用奶油黃；Reset Save 後會重新進入命名與選色流程。
 
@@ -120,9 +120,16 @@ https://<GitHub帳號>.github.io/<repository名稱>/?debug=1
 - 清理 `jelly-angry.png` 左側跨素材綠色殘片，並將清理規則保留在 `tools/slice_jellyfish.py`，方便之後重建素材。
 - 本版只涉及 UI／素材，不變更 Save 結構；`GAME_CONFIG.version` 維持 3，不需要額外 Migration。
 
+### V2.4 戰鬥用品名稱更新
+
+- KTT → **KTT+3**、PNN → **PNN+3**、QCC → **QCC+4**、RNN → **REE+5**。
+- PPT → **PTT+1**、NAP → **NAP+1**。
+- 為了相容既有玩家存檔，內部 `id` 與 `storageKey` 不變：RNN、PPT 等舊保存鍵仍照常讀寫，只更新所有商店、背包、準備畫面、Battle、提示與 Debug 的顯示名稱。
+- 本版不需清除 localStorage，也不需新增 Migration；`GAME_CONFIG.version` 維持 3。
+
 ### Battle Screen UI 修正
 
-- Battle Screen 的 KTT、PNN、QCC、RNN、PPT、NAP 都使用同一個 Icon Frame 置中規則。
+- Battle Screen 的 KTT+3、PNN+3、QCC+4、REE+5、PTT+1、NAP+1 都使用同一個 Icon Frame 置中規則。
 - 修正原本 38px Icon 欄位被 Visual 原始 layout box 撐開，導致膠囊／罐裝圖示偏移並壓到名稱的問題。
 - Visual 會在 Frame 內水平、垂直置中，名稱／Damage 與使用按鈕維持獨立欄位；不修改戰鬥數值、庫存扣除或 Action Lock。
 
@@ -146,7 +153,7 @@ Battle 中的 HP、Boss HP、狀態、回合、Battle Log 都只存在 `battle.j
 
 - `createBattleState()`：每次挑戰建立 Player HP 100、Boss HP 320、狀態清除的暫存戰鬥。
 - `getBattleActionQuantityLimits()`：依庫存、HP、狀態與 Config 算出本回合可使用數量。
-- `beginPlayerAction()`：處理基本攻擊、批量膠囊、批量 PPT、NAP、消耗品扣除、MISS 與玩家行動後的癢傷害。
+- `beginPlayerAction()`：處理基本攻擊、批量膠囊、批量 PTT+1、NAP+1、消耗品扣除、MISS 與玩家行動後的癢傷害。
 - `resolveBossTurn()`：依 Config 機率選擇 Boss 攻擊並處理傷害與狀態。
 - Debug HP／狀態操作、Boss 勝負紀錄、獎勵領取與獎勵重置。
 
@@ -164,10 +171,10 @@ Battle 中的 HP、Boss HP、狀態、回合、Battle Log 都只存在 `battle.j
 
 ## Item Consumption 與 Coupon 防重複
 
-- 戰鬥商品以 `inventory.battleItems` 的短代碼 KTT／PNN／QCC／RNN／PPT／NAP 保存數量。
+- 戰鬥商品以既有 `inventory.battleItems` 短代碼 KTT／PNN／QCC／RNN／PPT／NAP 保存數量；畫面顯示名稱則為 KTT+3／PNN+3／QCC+4／REE+5／PTT+1／NAP+1。
 - 商店批量購買一次扣除 `unitPrice × quantity`，並一次增加庫存。
 - 膠囊命中或 MISS 都會一次扣除選定數量；批量攻擊仍只觸發一次 Boss 回合。
-- PPT 批量使用會依選定數量回血並限制在 Max HP；NAP 戰鬥中固定扣除 1 個。
+- PTT+1 批量使用會依選定數量回血並限制在 Max HP；NAP+1 戰鬥中固定扣除 1 個。
 - 所有扣除都先寫回 Save，數量一律以非負整數處理，沒有庫存時按鈕 Disable。
 - 數量一律以非負整數處理，沒有庫存時按鈕 Disable。
 - `claimBossReward()` 會同時檢查 `rewardClaimed` 與 Coupon id `boss_aging_coupon_600`，兩者任一成立都拒絕重複加入。
@@ -210,3 +217,5 @@ Battle 中的 HP、Boss HP、狀態、回合、Battle Log 都只存在 `battle.j
 | V2.3：桌面圖鑑三欄、角色置中與 Skin 配色光圈 | 通過；1265px 實測三欄，角色與卡片中心對齊 |
 | V2.3：320／375／390／430px 圖鑑 Responsive | 通過；四種寬度均無橫向 Scroll，圖鑑改為雙欄 |
 | V2.3：爆氣水母素材清理 | 通過；512×512 PNG 左四分之一未再檢出異常綠色像素 |
+| V2.4：戰鬥用品新名稱在商店、背包、準備畫面、Battle 與 Debug 顯示 | 通過 |
+| V2.4：既有戰鬥物品保存鍵與數量相容 | 通過；仍使用 KTT／PNN／QCC／RNN／PPT／NAP 保存鍵 |

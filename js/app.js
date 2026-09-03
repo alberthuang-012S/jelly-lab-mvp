@@ -68,7 +68,7 @@ import {
 
 let save = loadSave();
 let currentView = "home";
-let shopCategory = "food";
+let shopCategory = "battle";
 let inventoryCategory = "food";
 let battleState = null;
 let battleActionSelection = null;
@@ -410,7 +410,7 @@ function handleResetSave() {
       pendingJellyfishName = "";
       selectedBaseColor = GAME_CONFIG.initialBaseColor;
       currentView = "home";
-      shopCategory = "food";
+      shopCategory = "battle";
       inventoryCategory = "food";
       renderApp();
       getElement("name-input")?.focus();
@@ -514,6 +514,7 @@ function handleAction(actionTarget) {
     case "view": {
       const nextView = viewIds.includes(actionTarget.dataset.view) ? actionTarget.dataset.view : "home";
       leaveBattleIfNeeded(nextView);
+      if (nextView === "shop") shopCategory = "battle";
       currentView = nextView;
       trackEvent(currentView === "challenge" ? "boss_challenge_open" : `${currentView === "home" ? "game_open" : `${currentView}_open`}`);
       renderApp();
@@ -557,7 +558,7 @@ function handleAction(actionTarget) {
     case "go-shop":
       leaveBattleIfNeeded("shop");
       currentView = "shop";
-      shopCategory = "food";
+      shopCategory = "battle";
       renderApp();
       trackEvent("shop_open");
       break;

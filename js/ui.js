@@ -478,7 +478,7 @@ function renderBattlePrep(save) {
   const itemSummary = getBattleInventorySummary(save);
   const hasItems = itemSummary.some((item) => item.quantity > 0);
   const progress = save.bossProgress.agingMonster;
-  const recoveryName = getBattleItemDisplayName("recovery", "PTT+1");
+  const recoveryName = getBattleItemDisplayName("recovery", "PPT+1");
   const ointmentName = getBattleItemDisplayName("ointment", "NAP+1");
 
   return `
@@ -568,7 +568,7 @@ function renderBattleStatus(battle) {
   const { itchy, blurred } = battle.player.status;
   const suggestions = [];
   if (itchy) suggestions.push(`建議使用 ${getBattleItemDisplayName("ointment", "NAP+1")}`);
-  if (blurred) suggestions.push(`建議使用 ${getBattleItemDisplayName("recovery", "PTT+1")}`);
+  if (blurred) suggestions.push(`建議使用 ${getBattleItemDisplayName("recovery", "PPT+1")}`);
 
   return `
     <section class="battle-status-card glass-card">

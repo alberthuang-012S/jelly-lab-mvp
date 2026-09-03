@@ -434,7 +434,7 @@ export const BATTLE_SHOP_ITEMS = [
   {
     id: "recovery_ppt",
     storageKey: "PPT",
-    name: "PTT+1",
+    name: "PPT+1",
     type: "recovery",
     category: "recovery",
     icon: "🧪",

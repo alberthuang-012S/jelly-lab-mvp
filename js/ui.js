@@ -3,20 +3,21 @@ import {
   BATTLE_SHOP_GROUPS,
   BATTLE_SHOP_ITEMS,
   EVOLUTION_STAGES,
+  FOODS,
   GAME_CONFIG,
   JELLYFISH_COLORS,
   QUANTITY_CONFIG,
   REWARDS_CONFIG,
   SHOP_CATEGORIES,
   SKINS
-} from "./config.js?v=2.15.2";
-import { getCollectionProgress, isCollected } from "./collection.js?v=2.15.2";
-import { getBattleInventorySummary, getInventoryItems, getRewardItems } from "./inventory.js?v=2.15.2";
-import { getBattleItemQuantity, getExpRequired, getFoodQuantity, getCurrentStage, getNextStage, getStageProgress, getEquippedAccessories } from "./state.js?v=2.15.2";
-import { renderJellyfish, renderJellyfishPreview, getScene, getSkin } from "./jellyfish.js?v=2.15.2";
-import { getItemStatus, getShopItems, isEquipped, isRepeatableItem } from "./shop.js?v=2.15.2";
-import { getBattleActionQuantityLimits, getBossForDisplay } from "./battle.js?v=2.15.2";
-import { renderBattleItemVisual, renderFoodVisual } from "./components.js?v=2.15.2";
+} from "./config.js?v=2.16.0";
+import { getCollectionProgress, isCollected } from "./collection.js?v=2.16.0";
+import { getBattleInventorySummary, getInventoryItems, getRewardItems } from "./inventory.js?v=2.16.0";
+import { getBattleItemQuantity, getExpRequired, getFoodQuantity, getCurrentStage, getNextStage, getStageProgress, getEquippedAccessories } from "./state.js?v=2.16.0";
+import { renderJellyfish, renderJellyfishPreview, getScene, getSkin } from "./jellyfish.js?v=2.16.0";
+import { getItemStatus, getShopItems, isEquipped, isRepeatableItem } from "./shop.js?v=2.16.0";
+import { getBattleActionQuantityLimits, getBossForDisplay } from "./battle.js?v=2.16.0";
+import { renderBattleItemVisual, renderFoodVisual } from "./components.js?v=2.16.0";
 
 export function escapeHtml(value) {
   return String(value)
@@ -111,6 +112,83 @@ function renderAccessoryLayoutControls(save, accessoryEditMode = false) {
         <button class="small-action ${accessoryEditMode ? "button-primary" : ""}" data-action="toggle-accessory-editor">${accessoryEditMode ? "完成調整" : "調整位置"}</button>
       </div>
     </section>
+  `;
+}
+
+function normalizeQuickFeedQuantity(value, max) {
+  const safeMax = Math.max(1, Math.floor(Number(max) || 1));
+  const number = Number(value);
+
+  if (!Number.isFinite(number)) return 1;
+  return Math.min(safeMax, Math.max(1, Math.floor(number)));
+}
+
+export function renderQuickFeedPanel(save, options = {}) {
+  if (options.quickFeedOpen !== true) return "";
+
+  const ownedFoods = FOODS.filter((food) => getFoodQuantity(save, food.id) > 0);
+  const selectedFood = ownedFoods.find((food) => food.id === options.quickFeedFoodId) || ownedFoods[0] || null;
+  const selectedStock = selectedFood ? getFoodQuantity(save, selectedFood.id) : 0;
+  const selectedQuantity = selectedFood ? normalizeQuickFeedQuantity(options.quickFeedQuantity, selectedStock) : 0;
+  const selectedExp = selectedFood ? selectedFood.exp * selectedQuantity : 0;
+
+  return `
+    <div class="quick-feed-layer" role="dialog" aria-modal="true" aria-labelledby="quick-feed-title">
+      <button type="button" class="quick-feed-backdrop" data-action="quick-feed-close" aria-label="關閉快速餵食面板"></button>
+      <section class="quick-feed-sheet">
+        <div class="quick-feed-sheet-heading">
+          <div>
+            <span class="card-kicker">QUICK FEED · 餵食助手</span>
+            <h2 id="quick-feed-title">選擇要餵的食物</h2>
+            <p>餵給${escapeHtml(save.jellyfish.name)}，一次可以餵多份。</p>
+          </div>
+          <button type="button" class="quick-feed-close" data-action="quick-feed-close" aria-label="關閉">×</button>
+        </div>
+
+        ${ownedFoods.length ? `
+          <div class="quick-feed-food-grid" role="list" aria-label="已有庫存的食物">
+            ${ownedFoods.map((food) => {
+              const quantity = getFoodQuantity(save, food.id);
+              const isSelected = food.id === selectedFood?.id;
+              const detail = food.name.startsWith(`${food.shortName} `) ? food.name.slice(food.shortName.length + 1) : food.name;
+              return `
+                <button type="button" class="quick-feed-food-card ${isSelected ? "is-selected" : ""}" data-action="quick-feed-select" data-food-id="${food.id}" aria-pressed="${isSelected}">
+                  <span class="quick-feed-food-card-visual">${renderFoodVisual(food, { compact: true })}</span>
+                  <span class="quick-feed-food-card-copy">
+                    <strong>${escapeHtml(food.shortName)}</strong>
+                    <small>${escapeHtml(detail)}</small>
+                    <em>EXP +${formatNumber(food.exp)} · 庫存 ×${formatNumber(quantity)}</em>
+                  </span>
+                </button>
+              `;
+            }).join("")}
+          </div>
+
+          <div class="quick-feed-selection">
+            <div class="quick-feed-selection-copy">
+              <span class="card-kicker">準備餵食</span>
+              <strong>${escapeHtml(selectedFood.shortName)}</strong>
+              <small>單份 EXP +${formatNumber(selectedFood.exp)} · 剩餘 ×${formatNumber(selectedStock)}</small>
+              <b>本次獲得 EXP +${formatNumber(selectedExp)}</b>
+            </div>
+            <div class="quantity-control quick-feed-quantity-control" aria-label="餵食數量">
+              <button type="button" class="quantity-step" data-action="quick-feed-quantity-decrease" data-food-id="${selectedFood.id}" aria-label="餵食數量減少">−</button>
+              <input type="number" min="1" max="${selectedStock}" step="1" inputmode="numeric" value="${selectedQuantity}" data-action="quick-feed-quantity-input" data-food-id="${selectedFood.id}" aria-label="餵食數量，${escapeHtml(selectedFood.shortName)}" />
+              <button type="button" class="quantity-step" data-action="quick-feed-quantity-increase" data-food-id="${selectedFood.id}" aria-label="餵食數量增加">＋</button>
+            </div>
+          </div>
+          <button type="button" class="button-primary quick-feed-submit" data-action="quick-feed-submit" data-food-id="${selectedFood.id}" ${options.quickFeedActionLocked ? "disabled" : ""}>🍰 餵食 ${escapeHtml(selectedFood.shortName)} ×${selectedQuantity}</button>
+          <p class="quick-feed-note">餵食後會立即更新 EXP、等級與背包庫存。</p>
+        ` : `
+          <div class="quick-feed-empty">
+            <span class="quick-feed-empty-icon" aria-hidden="true">🍽️</span>
+            <strong>目前還沒有食物</strong>
+            <p>先到食物商店準備一些點心，再回來陪水母長大吧。</p>
+            <button type="button" class="small-action button-primary" data-action="quick-feed-to-shop">前往食物商店</button>
+          </div>
+        `}
+      </section>
+    </div>
   `;
 }
 
@@ -216,8 +294,8 @@ export function renderHome(container, save, options = {}) {
             <button class="action-button action-secondary" data-action="chat" ${canChat ? "" : "disabled"}>
               <span>◌</span><span>聊聊天</span><small>${save.daily.chatCount} / ${GAME_CONFIG.chatDailyLimit}</small>
             </button>
-            <button class="action-button action-tertiary" data-action="go-inventory">
-              <span>🍰</span><span>餵食</span><small>打開背包</small>
+            <button class="action-button action-tertiary" data-action="quick-feed">
+              <span>🍰</span><span>餵食</span><small>選擇食物</small>
             </button>
           </div>
           <p class="interaction-note">每日凌晨重置互動次數 · 今天還能獲得 ${Math.max(0, GAME_CONFIG.dailyIntimacyLimit - save.daily.intimacyEarned)} 點親密度</p>

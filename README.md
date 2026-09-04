@@ -1,6 +1,6 @@
-# 水母養成所 Jelly Lab V2.15.2
+# 水母養成所 Jelly Lab V2.16.0
 
-Jelly Lab V2.15.2 保留既有水母養成、戰鬥與自由配件配置，將養成商店的食物更新為五款新的包裝商品，並以共用 CSS Visual 呈現在商店、背包、餵食確認與購買成功視窗；BBB+2 的透明包裝改為約九成黑巧克力與一成透光外膜，並移除 IEQ+1、IPS+1、YSS+2 包裝上方的條紋裝飾。食物價格與 EXP 統一為 2 點換 1 EXP，前四款沿用原本存檔 ID，第五款 BF02+1 為新增商品；專案仍使用 HTML5、CSS3、Vanilla JavaScript 與 `localStorage`，不需要後端、帳號或 npm 依賴即可遊玩。
+Jelly Lab V2.16.0 保留既有水母養成、戰鬥與自由配件配置，將首頁「餵食」改為可直接操作的快速餵食面板：選擇已有食物、調整份數後一次完成批量餵食，立即更新 EXP、等級與庫存。原本背包的單份餵食確認流程仍保留；專案仍使用 HTML5、CSS3、Vanilla JavaScript 與 `localStorage`，不需要後端、帳號或 npm 依賴即可遊玩。
 
 ## 啟動方式
 
@@ -61,7 +61,7 @@ https://<GitHub帳號>.github.io/<repository名稱>/?debug=1
    ├─ inventory.js            # 食物、造型、配件、場景、戰鬥用品與獎勵資料
    ├─ jellyfish.js            # Skin、場景、配件與角色素材組裝
    ├─ collection.js           # 8 款水母圖鑑進度
-   ├─ ui.js                   # Render、戰鬥畫面、Toast、Modal 與 Debug 面板
+   ├─ ui.js                   # Render、快速餵食面板、戰鬥畫面、Toast、Modal 與 Debug 面板
    └─ analytics.js            # trackEvent 預留介面
 ```
 
@@ -232,6 +232,14 @@ https://<GitHub帳號>.github.io/<repository名稱>/?debug=1
 - 移除 IEQ+1、IPS+1、YSS+2 包裝上方的條紋／亮條，保留乾淨的包裝本體與商品標籤。
 - 本版不清除 localStorage，Save `version: 6` 維持不變；既有 points、LV、EXP、親密度、戰鬥用品、Coupon、Skin、配件與場景均照常保留。
 
+### V2.16 快速餵食面板
+
+- 首頁「餵食」改為開啟快速餵食面板，不再直接跳轉背包；面板以底部 Sheet 呈現，桌面版置中，手機版可單手操作。
+- 面板只列出目前有庫存的五款食物，點選卡片即可切換品項，並可用 `−／＋` 或數字輸入調整本次餵食數量。
+- 批量餵食會先確認整批庫存，再一次扣除數量並以 `food.exp × quantity` 呼叫既有 `addExp()`，保留 EXP 溢位與 LV10 MAX 邏輯。
+- 餵食完成後立即 `persistSave()`，顯示成功 Toast、餵食動畫與既有 Level Up Modal；快速連點時由面板 Action Lock 防止重複消耗。
+- 沒有食物時顯示友善空狀態，並可直接前往「食物」商店；本版不變更 Save Schema、Battle、商店或背包資料格式。
+
 ## Save Migration 做法
 
 `GAME_CONFIG.version` 目前為 `6`。`storage.js` 讀取既有 `jellyLabSave` 後交由 `normalizeSave()` 正規化：
@@ -287,7 +295,7 @@ Battle 中的 HP、Boss HP、狀態、回合、Battle Log 都只存在 `battle.j
 
 ## 測試結果
 
-已使用本機瀏覽器進行實際點擊、購買、進入戰鬥、使用道具、勝負與 Responsive 測試；V2.2 另實測 Reset、消費後 Refresh、六款戰鬥商品置中與四種手機寬度。並執行全部 JavaScript `node --check` 與 Python 工具語法檢查。
+已使用本機瀏覽器進行實際點擊、購買、進入戰鬥、使用道具、勝負、快速餵食與 Responsive 測試；V2.2 另實測 Reset、消費後 Refresh、六款戰鬥商品置中與四種手機寬度。並執行全部 JavaScript `node --check` 與 Python 工具語法檢查。
 
 | 測試項目 | 結果 |
 | --- | --- |
@@ -355,3 +363,9 @@ Battle 中的 HP、Boss HP、狀態、回合、Battle Log 都只存在 `battle.j
 | V2.15：瀏覽器錯誤 Log | 通過；本機商店與手機測試頁均未發現 error |
 | V2.15.1：BBB+2 黑巧克力／透明包裝比例 | 通過；商店實際顯示深黑巧克力約 90%，外層透明包裝約 10%，BBB+2 標籤清楚 |
 | V2.15.2：移除 IEQ+1／IPS+1／YSS+2 包裝上方條紋 | 通過；三款商品的 `::after` 裝飾隱藏，BBB+2 巧克力與 BF02+1 封口保留 |
+| V2.16：首頁餵食入口開啟快速餵食面板，不切換至背包 | 通過；首頁仍停留在 `view-home`，面板可直接關閉 |
+| V2.16：選擇食物、調整數量並批量餵食，庫存與 EXP 同步更新 | 通過；IPS+1 ×3 實際由庫存 4 減至 1，EXP 60 增至 135（+75） |
+| V2.16：快速餵食後 Refresh，點數／食物庫存／EXP 仍保留 | 通過；Refresh 後仍為 48,620 點、IPS+1 ×1、EXP 135 |
+| V2.16：無食物空狀態可前往食物商店 | 通過；新存檔開啟面板顯示空狀態，點擊後直接進入食物分類 |
+| V2.16：320px 快速餵食面板無橫向 Scroll | 通過；有庫存與無庫存面板均為 `scrollWidth = 320px`，面板右界 300px |
+| V2.16：背包原本單份餵食流程、快速連點與瀏覽器錯誤 Log | 通過；背包確認視窗仍可開啟，雙擊只餵食一次，兩個本機測試頁均無 error |

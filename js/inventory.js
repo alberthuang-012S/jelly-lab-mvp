@@ -1,5 +1,5 @@
-import { ACCESSORIES, BATTLE_SHOP_ITEMS, FOODS, SCENES, SKINS } from "./config.js?v=2.15.2";
-import { consumeFood, getBattleItemQuantity, getFoodQuantity } from "./state.js?v=2.15.2";
+import { ACCESSORIES, BATTLE_SHOP_ITEMS, FOODS, SCENES, SKINS } from "./config.js?v=2.16.0";
+import { consumeFood, getBattleItemQuantity, getFoodQuantity } from "./state.js?v=2.16.0";
 
 export function getInventoryItems(save, category) {
   if (category === "food") {
@@ -36,14 +36,22 @@ export function getBattleInventorySummary(save) {
   }));
 }
 
-export function feedFood(save, food) {
-  if (!food || getFoodQuantity(save, food.id) <= 0) {
-    return { ok: false, reason: "這份食物已經吃完了。" };
+export function feedFood(save, food, quantity = 1) {
+  const amount = Number.isFinite(Number(quantity)) ? Math.floor(Number(quantity)) : 0;
+
+  if (!food || amount < 1) {
+    return { ok: false, reason: "請選擇要餵食的食物。" };
   }
 
-  if (!consumeFood(save, food.id)) {
-    return { ok: false, reason: "這份食物已經吃完了。" };
+  const available = getFoodQuantity(save, food.id);
+  if (available < amount) {
+    return { ok: false, reason: amount === 1 ? "這份食物已經吃完了。" : "食物庫存不足，請調整餵食數量。" };
   }
 
-  return { ok: true, food };
+  // 先確認整批庫存足夠，再逐份扣除，避免批量餵食只完成一半。
+  for (let index = 0; index < amount; index += 1) {
+    consumeFood(save, food.id);
+  }
+
+  return { ok: true, food, quantity: amount };
 }

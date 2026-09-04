@@ -10,11 +10,11 @@ import {
   QUANTITY_CONFIG,
   SCENES,
   SKINS
-} from "./config.js?v=2.15.2";
+} from "./config.js?v=2.16.0";
 import { trackEvent } from "./analytics.js";
-import { feedFood, getInventoryItems } from "./inventory.js?v=2.15.2";
-import { getScene } from "./jellyfish.js?v=2.15.2";
-import { purchaseItem, getShopItems } from "./shop.js?v=2.15.2";
+import { feedFood, getInventoryItems } from "./inventory.js?v=2.16.0";
+import { getScene } from "./jellyfish.js?v=2.16.0";
+import { purchaseItem, getShopItems } from "./shop.js?v=2.16.0";
 import {
   addBattleItem,
   addExp,
@@ -36,7 +36,7 @@ import {
   petJellyfish,
   setAccessoryPosition,
   unequipAccessory
-} from "./state.js?v=2.15.2";
+} from "./state.js?v=2.16.0";
 import {
   beginPlayerAction,
   claimBossReward,
@@ -50,8 +50,8 @@ import {
   recordBossVictory,
   resetBossReward,
   resolveBossTurn
-} from "./battle.js?v=2.15.2";
-import { clearSave, createAndPersistSave, loadSave, persistSave } from "./storage.js?v=2.15.2";
+} from "./battle.js?v=2.16.0";
+import { clearSave, createAndPersistSave, loadSave, persistSave } from "./storage.js?v=2.16.0";
 import {
   closeModal,
   escapeHtml,
@@ -63,6 +63,7 @@ import {
   renderHome,
   renderInventory,
   renderOnboardingState,
+  renderQuickFeedPanel,
   renderShop,
   setOnboardingVisible,
   showLevelUpModal,
@@ -71,8 +72,8 @@ import {
   showPurchaseSuccess,
   showToast,
   updateHeader
-} from "./ui.js?v=2.15.2";
-import { renderFoodVisual } from "./components.js?v=2.15.2";
+} from "./ui.js?v=2.16.0";
+import { renderFoodVisual } from "./components.js?v=2.16.0";
 
 let save = loadSave();
 let currentView = "home";
@@ -87,6 +88,10 @@ let selectedBaseColor = GAME_CONFIG.initialBaseColor;
 let debugCollapsed = true;
 let accessoryEditMode = false;
 let selectedAccessoryId = null;
+let quickFeedOpen = false;
+let quickFeedFoodId = null;
+let quickFeedQuantity = 1;
+let quickFeedActionLocked = false;
 let accessoryGesture = null;
 let accessoryToolbarFrame = null;
 const debugEnabled = new URLSearchParams(window.location.search).get("debug") === "1";
@@ -154,7 +159,8 @@ function renderViews() {
     shop: getElement("view-shop"),
     challenge: getElement("view-challenge"),
     inventory: getElement("view-inventory"),
-    collection: getElement("view-collection")
+    collection: getElement("view-collection"),
+    quickFeed: getElement("quick-feed-root")
   };
 
   viewIds.forEach((viewId) => {
@@ -163,7 +169,10 @@ function renderViews() {
     container.hidden = viewId !== currentView;
   });
 
-  if (!save) return;
+  if (!save) {
+    if (containers.quickFeed) containers.quickFeed.innerHTML = "";
+    return;
+  }
 
   if (accessoryEditMode) {
     const equippedAccessories = getEquippedAccessories(save);
@@ -173,6 +182,9 @@ function renderViews() {
   }
 
   renderHome(containers.home, save, { accessoryEditMode, selectedAccessoryId });
+  if (containers.quickFeed) {
+    containers.quickFeed.innerHTML = renderQuickFeedPanel(save, { quickFeedOpen, quickFeedFoodId, quickFeedQuantity, quickFeedActionLocked });
+  }
   scheduleAccessoryToolbarPosition();
   renderShop(containers.shop, save, shopCategory, shopQuantities);
   renderChallenge(containers.challenge, save, battleState, battleActionSelection);
@@ -212,6 +224,83 @@ function animateAvatar(actionClass) {
   void character.offsetWidth;
   character.classList.add(actionClass);
   window.setTimeout(() => character.classList.remove(actionClass), 1100);
+}
+
+function getQuickFeedFood() {
+  if (!save) return null;
+
+  const ownedFoods = FOODS.filter((food) => getFoodQuantity(save, food.id) > 0);
+  return ownedFoods.find((food) => food.id === quickFeedFoodId) || ownedFoods[0] || null;
+}
+
+function closeQuickFeedPanel() {
+  quickFeedOpen = false;
+  quickFeedFoodId = null;
+  quickFeedQuantity = 1;
+}
+
+function openQuickFeedPanel() {
+  if (!save) return;
+
+  const firstOwnedFood = FOODS.find((food) => getFoodQuantity(save, food.id) > 0) || null;
+  quickFeedOpen = true;
+  quickFeedFoodId = firstOwnedFood?.id || null;
+  quickFeedQuantity = 1;
+  renderApp();
+  trackEvent("quick_feed_open", { source: "home" });
+}
+
+function updateQuickFeedQuantity(foodId, nextQuantity) {
+  if (!save) return;
+
+  if (foodId) quickFeedFoodId = foodId;
+  const food = getQuickFeedFood();
+  if (!food) {
+    quickFeedQuantity = 1;
+    renderApp();
+    return;
+  }
+
+  const stock = getFoodQuantity(save, food.id);
+  const number = Number(nextQuantity);
+  quickFeedQuantity = Number.isFinite(number) ? Math.min(stock, Math.max(1, Math.floor(number))) : 1;
+  renderApp();
+}
+
+function handleQuickFeedSubmit() {
+  if (!save || !quickFeedOpen || quickFeedActionLocked) return;
+
+  const food = getQuickFeedFood();
+  if (!food) {
+    showToast("目前沒有可餵食的食物，先去商店準備一些吧。", "warning");
+    return;
+  }
+
+  const stock = getFoodQuantity(save, food.id);
+  const number = Number(quickFeedQuantity);
+  const quantity = Number.isFinite(number) ? Math.min(stock, Math.max(1, Math.floor(number))) : 1;
+  quickFeedActionLocked = true;
+
+  const result = feedFood(save, food, quantity);
+  if (!result.ok) {
+    quickFeedActionLocked = false;
+    showToast(result.reason, "warning");
+    renderApp();
+    return;
+  }
+
+  const gainedExp = food.exp * result.quantity;
+  const levelUps = addExp(save, gainedExp);
+  persist();
+  trackEvent("feed_jellyfish", { itemId: food.id, quantity: result.quantity, exp: gainedExp, source: "home_quick_feed" });
+  closeQuickFeedPanel();
+  renderApp();
+  animateAvatar("is-feeding");
+  showToast(`🍰 ${food.shortName || food.name} ×${result.quantity} · EXP +${gainedExp}`, "success");
+  showLevelUps(levelUps);
+  window.setTimeout(() => {
+    quickFeedActionLocked = false;
+  }, 400);
 }
 
 function clampAccessoryCoordinate(value, minimum, maximum) {
@@ -795,6 +884,8 @@ function handleResetSave() {
       battleActionSelection = null;
       accessoryDrag = null;
       accessoryEditMode = false;
+      closeQuickFeedPanel();
+      quickFeedActionLocked = false;
       shopQuantities = {};
       onboardingStep = "name";
       pendingJellyfishName = "";
@@ -906,6 +997,7 @@ function handleAction(actionTarget) {
       const nextView = viewIds.includes(actionTarget.dataset.view) ? actionTarget.dataset.view : "home";
       leaveBattleIfNeeded(nextView);
       if (nextView !== "home") accessoryEditMode = false;
+      if (nextView !== "home") closeQuickFeedPanel();
       if (nextView === "shop") shopCategory = "battle";
       currentView = nextView;
       trackEvent(currentView === "challenge" ? "boss_challenge_open" : `${currentView === "home" ? "game_open" : `${currentView}_open`}`);
@@ -941,8 +1033,43 @@ function handleAction(actionTarget) {
       trackEvent("chat_jellyfish");
       break;
     }
+    case "quick-feed":
+      openQuickFeedPanel();
+      break;
+    case "quick-feed-close":
+      closeQuickFeedPanel();
+      renderApp();
+      break;
+    case "quick-feed-select":
+      if (!save || quickFeedActionLocked) return;
+      quickFeedFoodId = actionTarget.dataset.foodId || null;
+      quickFeedQuantity = 1;
+      renderApp();
+      break;
+    case "quick-feed-quantity-decrease":
+      if (!quickFeedActionLocked) updateQuickFeedQuantity(actionTarget.dataset.foodId, quickFeedQuantity - 1);
+      break;
+    case "quick-feed-quantity-increase":
+      if (!quickFeedActionLocked) updateQuickFeedQuantity(actionTarget.dataset.foodId, quickFeedQuantity + 1);
+      break;
+    case "quick-feed-quantity-input":
+      if (!quickFeedActionLocked) updateQuickFeedQuantity(actionTarget.dataset.foodId, actionTarget.value);
+      break;
+    case "quick-feed-submit":
+      handleQuickFeedSubmit();
+      break;
+    case "quick-feed-to-shop":
+      closeQuickFeedPanel();
+      leaveBattleIfNeeded("shop");
+      accessoryEditMode = false;
+      currentView = "shop";
+      shopCategory = "food";
+      renderApp();
+      trackEvent("shop_open", { category: "food", source: "quick_feed" });
+      break;
     case "go-inventory":
       leaveBattleIfNeeded("inventory");
+      closeQuickFeedPanel();
       accessoryEditMode = false;
       currentView = "inventory";
       inventoryCategory = "food";
@@ -950,6 +1077,7 @@ function handleAction(actionTarget) {
       break;
     case "go-shop":
       leaveBattleIfNeeded("shop");
+      closeQuickFeedPanel();
       accessoryEditMode = false;
       currentView = "shop";
       shopCategory = "battle";
@@ -958,6 +1086,7 @@ function handleAction(actionTarget) {
       break;
     case "go-battle-shop":
       leaveBattleIfNeeded("shop");
+      closeQuickFeedPanel();
       accessoryEditMode = false;
       currentView = "shop";
       shopCategory = "battle";
@@ -965,6 +1094,7 @@ function handleAction(actionTarget) {
       trackEvent("battle_shop_open");
       break;
     case "go-challenge":
+      closeQuickFeedPanel();
       accessoryEditMode = false;
       currentView = "challenge";
       renderApp();
@@ -972,6 +1102,7 @@ function handleAction(actionTarget) {
       break;
     case "go-accessory-shop":
       leaveBattleIfNeeded("shop");
+      closeQuickFeedPanel();
       accessoryEditMode = false;
       currentView = "shop";
       shopCategory = "accessory";
@@ -980,6 +1111,7 @@ function handleAction(actionTarget) {
       break;
     case "go-home-accessory-editor":
       leaveBattleIfNeeded("home");
+      closeQuickFeedPanel();
       currentView = "home";
       accessoryEditMode = true;
       selectedAccessoryId = getEquippedAccessories(save)[0] || null;

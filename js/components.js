@@ -40,19 +40,11 @@ function renderTin(item, modifier) {
 }
 
 function renderBottle(item, modifier) {
-  const bodyColor = safeColor(item.bodyColor, "#fafaf7");
-  const pumpColor = safeColor(item.pumpColor, "#f0f1ee");
-  const labelColor = safeColor(item.labelColor, "#6c578d");
-  const labelAccent = safeColor(item.labelAccent, "#d9d0e8");
+  const asset = typeof item.asset === "string" ? item.asset : "";
 
   return `
-    <span class="battle-item-visual bottle-visual${modifier}" style="--bottle-body-color:${bodyColor};--bottle-pump-color:${pumpColor};--bottle-label-color:${labelColor};--bottle-label-accent:${labelAccent}" aria-hidden="true">
-      <span class="bottle-pump"><span class="bottle-nozzle"></span></span>
-      <span class="bottle-neck"></span>
-      <span class="bottle-body">
-        <span class="bottle-highlight"></span>
-        <span class="bottle-label"><strong>${item.name}</strong></span>
-      </span>
+    <span class="battle-item-visual bottle-visual${modifier}" aria-hidden="true">
+      <img class="bottle-image" src="${asset}" alt="" draggable="false" />
     </span>
   `;
 }

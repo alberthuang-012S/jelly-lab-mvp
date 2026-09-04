@@ -1,6 +1,6 @@
-# 水母養成所 Jelly Lab V2.7
+# 水母養成所 Jelly Lab V2.8
 
-Jelly Lab V2.7 是在既有養成與 BOSS 挑戰 MVP 上更新 PPA+1 乳霜視覺與自由配件配置。延續多配件裝備、共用戰鬥商品 Visual、批量購買／使用與水母顏色選擇，這版讓所有已擁有配件都能同時裝備，並可在養成主角區拖曳到喜歡的位置。專案仍使用 HTML5、CSS3、Vanilla JavaScript 與 `localStorage`，不需要後端、帳號或 npm 依賴即可遊玩。
+Jelly Lab V2.8 是在既有養成與 BOSS 挑戰 MVP 上更新 PPA+1 乳霜素材與自由配件配置。延續多配件裝備、共用戰鬥商品 Visual、批量購買／使用與水母顏色選擇，這版讓所有已擁有配件都能同時裝備，並可在養成主角區拖曳到喜歡的位置。專案仍使用 HTML5、CSS3、Vanilla JavaScript 與 `localStorage`，不需要後端、帳號或 npm 依賴即可遊玩。
 
 ## 啟動方式
 
@@ -39,14 +39,17 @@ https://<GitHub帳號>.github.io/<repository名稱>/?debug=1
 ├─ index.html                 # 既有外框、五個主要畫面與導覽
 ├─ README.md
 ├─ 水母圖.jpg                 # 提供的原始 4×2 水母素材圖
-├─ assets/jellyfish/          # 8 張透明水母 PNG
+├─ assets/
+│  ├─ jellyfish/              # 8 張透明水母 PNG
+│  └─ items/
+│     └─ ppa-plus-one.png     # 使用者提供的 PPA+1 乳霜按壓瓶素材
 ├─ tools/slice_jellyfish.py   # 重建水母透明素材的切圖工具
 ├─ css/
 │  ├─ main.css                # 既有基礎樣式與元件
 │  ├─ animations.css          # 既有養成動畫
 │  ├─ responsive.css          # 既有 Responsive 斷點
 │  ├─ battle.css              # V2 戰鬥、獎勵與 Boss 動畫樣式
-│  └─ v2-1.css                # V2.1/V2.2 商品 Visual、數量控制、選色與置中樣式
+│  └─ v2-1.css                # V2.1/V2.2/V2.8 商品 Visual、數量控制、選色與置中樣式
 └─ js/
    ├─ app.js                  # 應用入口、事件路由、畫面切換與 Battle orchestration
    ├─ config.js               # 商品、等級、進化、Boss、攻擊、戰鬥商品與獎勵設定
@@ -159,6 +162,12 @@ https://<GitHub帳號>.github.io/<repository名稱>/?debug=1
 - 養成首頁新增「調整位置」模式：可用滑鼠或觸控拖曳配件，放開後立即寫入 localStorage；也支援方向鍵微調與「回復預設」。
 - 背包的配件分類新增自由配置說明與「前往調整」入口；離開編輯模式後角色、戰鬥畫面與 Refresh 都會沿用已保存位置。
 
+### V2.8 PPA+1 使用提供素材
+
+- PPA+1 改用使用者提供的 `assets/items/ppa-plus-one.png` 按壓瓶圖片，不再由 CSS 重畫瓶身。
+- 商店、背包與 Battle 透過 `components.js` 的 `renderBattleItemVisual()` 共用同一張素材；商品名稱、乳霜效果與舊存檔 `NAP` 保存鍵維持不變。
+- 這次只更新素材與顯示樣式，Save `version: 5` 不變，不需要新增 Save Migration。
+
 ## Save Migration 做法
 
 `GAME_CONFIG.version` 目前為 `5`。`storage.js` 讀取既有 `jellyLabSave` 後交由 `normalizeSave()` 正規化：
@@ -258,3 +267,4 @@ Battle 中的 HP、Boss HP、狀態、回合、Battle Log 都只存在 `battle.j
 | V2.7：首頁調整位置、滑鼠／觸控拖曳、方向鍵微調與回復預設 | 通過；實際拖曳皇冠後位置保存，回復預設回到設定值 |
 | V2.7：Refresh 後配件位置、點數與已裝備狀態保留 | 通過；重新整理後仍讀取拖曳後的 X／Y 百分比 |
 | V2.7：320px 配件編輯器、PPA+1 商店與新提示無橫向 Scroll | 通過；本機測得 document／body scrollWidth 305px，小於 320px |
+| V2.8：使用者提供的 PPA+1 乳霜圖片在商店、背包、Battle 共用 | 通過；素材已加入 `assets/items/ppa-plus-one.png`，三處由同一 Visual Component 載入 |

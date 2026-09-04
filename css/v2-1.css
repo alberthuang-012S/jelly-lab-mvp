@@ -1,4 +1,4 @@
-/* Jelly Lab V2.1/V2.2/V2.6/V2.7 · visual system, quantity controls, onboarding color choice, and alignment */
+/* Jelly Lab V2.1/V2.2/V2.6/V2.7/V2.8 · visual system, quantity controls, onboarding color choice, and alignment */
 
 /* Shared battle item visuals */
 
@@ -121,100 +121,20 @@
 .bottle-visual {
   width: 42px;
   height: 76px;
-  border: 1px solid rgba(128, 129, 135, 0.28);
-  border-radius: 10px 10px 13px 13px;
-  background: var(--bottle-body-color);
-  box-shadow: inset 4px 0 7px rgba(255, 255, 255, 0.82), inset -4px -7px 9px rgba(117, 122, 131, 0.11), 0 9px 13px rgba(56, 83, 105, 0.14);
+  overflow: hidden;
+  border: 1px solid rgba(119, 126, 164, 0.18);
+  border-radius: 11px 11px 14px 14px;
+  background: #e8e9fb;
+  box-shadow: 0 9px 13px rgba(56, 83, 105, 0.14);
   transform: scale(var(--visual-scale, 1));
 }
 
-.bottle-body {
-  position: absolute;
-  z-index: 1;
-  top: 14px;
-  right: 2px;
-  bottom: 0;
-  left: 2px;
-  overflow: hidden;
-  border-radius: 9px 9px 11px 11px;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.72), transparent 22% 78%, rgba(125, 129, 137, 0.08)), var(--bottle-body-color);
-}
-
-.bottle-body::before {
-  position: absolute;
-  top: -3px;
-  right: 6px;
-  left: 6px;
-  height: 7px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.72);
-  content: "";
-}
-
-.bottle-pump {
-  position: absolute;
-  z-index: 3;
-  top: -10px;
-  left: 6px;
-  width: 28px;
-  height: 13px;
-  border: 1px solid rgba(126, 128, 135, 0.28);
-  border-radius: 7px 7px 3px 3px;
-  background: linear-gradient(180deg, #fff, var(--bottle-pump-color));
-  box-shadow: inset 0 2px 2px rgba(255, 255, 255, 0.8), 0 2px 3px rgba(80, 88, 99, 0.12);
-}
-
-.bottle-nozzle {
-  position: absolute;
-  top: 3px;
-  right: -10px;
-  width: 13px;
-  height: 6px;
-  border: 1px solid rgba(126, 128, 135, 0.25);
-  border-left: 0;
-  border-radius: 0 5px 5px 0;
-  background: var(--bottle-pump-color);
-}
-
-.bottle-neck {
-  position: absolute;
-  z-index: 2;
-  top: 0;
-  right: 11px;
-  left: 11px;
-  height: 18px;
-  border: 1px solid rgba(126, 128, 135, 0.2);
-  border-radius: 5px 5px 3px 3px;
-  background: linear-gradient(90deg, #fff, var(--bottle-pump-color), #fff);
-}
-
-.bottle-highlight {
-  position: absolute;
-  top: 16px;
-  left: 6px;
-  width: 4px;
-  height: 34px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.62);
-}
-
-.bottle-label {
-  position: absolute;
-  top: 42px;
-  right: 1px;
-  left: 1px;
-  display: grid;
-  justify-items: center;
-  color: var(--bottle-label-color);
-  font-family: ui-sans-serif, system-ui, sans-serif;
-  line-height: 1;
-  text-align: center;
-}
-
-.bottle-label strong {
-  font-size: 0.6rem;
-  font-weight: 900;
-  letter-spacing: -0.03em;
+.bottle-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.75);
 }
 
 .tin-visual {

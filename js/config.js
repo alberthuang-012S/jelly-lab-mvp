@@ -479,6 +479,7 @@ export const BATTLE_SHOP_ITEMS = [
     category: "ointment",
     icon: "🧴",
     visualType: "bottle",
+    asset: "./assets/items/ppa-plus-one.png",
     bodyColor: "#FAFAF7",
     pumpColor: "#F0F1EE",
     labelColor: "#6C578D",

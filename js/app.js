@@ -13,7 +13,7 @@ import {
 } from "./config.js";
 import { trackEvent } from "./analytics.js";
 import { feedFood, getInventoryItems } from "./inventory.js";
-import { getScene } from "./jellyfish.js";
+import { getScene } from "./jellyfish.js?v=2.12.0";
 import { purchaseItem, getShopItems } from "./shop.js";
 import {
   addBattleItem,
@@ -70,7 +70,7 @@ import {
   showPurchaseSuccess,
   showToast,
   updateHeader
-} from "./ui.js";
+} from "./ui.js?v=2.12.0";
 
 let save = loadSave();
 let currentView = "home";
@@ -219,11 +219,11 @@ function handleAccessoryPointerDown(event) {
   const target = getAccessoryDragTarget(event);
   if (!target || accessoryDrag) return;
 
-  const character = target.closest(".jelly-character");
-  const rect = character?.getBoundingClientRect();
+  const coordinateLayer = target.closest(".jelly-accessory-layer");
+  const rect = coordinateLayer?.getBoundingClientRect();
   const accessoryId = target.dataset.accessoryId;
 
-  if (!character || !rect || !rect.width || !rect.height || !accessoryId) return;
+  if (!coordinateLayer || !rect || !rect.width || !rect.height || !accessoryId) return;
 
   const currentPosition = getAccessoryPosition(save, accessoryId);
   const centerX = rect.left + (currentPosition.x / 100) * rect.width;
@@ -231,7 +231,7 @@ function handleAccessoryPointerDown(event) {
 
   accessoryDrag = {
     accessoryId,
-    character,
+    coordinateLayer,
     pointerId: event.pointerId,
     target,
     offsetX: event.clientX - centerX,
@@ -248,8 +248,8 @@ function handleAccessoryPointerDown(event) {
 function handleAccessoryPointerMove(event) {
   if (!accessoryDrag || accessoryDrag.pointerId !== event.pointerId) return;
 
-  const { character, offsetX, offsetY, target } = accessoryDrag;
-  const rect = character.getBoundingClientRect();
+  const { coordinateLayer, offsetX, offsetY, target } = accessoryDrag;
+  const rect = coordinateLayer.getBoundingClientRect();
 
   if (!rect.width || !rect.height) return;
 

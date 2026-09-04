@@ -1,6 +1,6 @@
-# 水母養成所 Jelly Lab V2.11.0
+# 水母養成所 Jelly Lab V2.12.0
 
-Jelly Lab V2.11.0 是在既有養成與 BOSS 挑戰 MVP 上更新 PPA+1 遊戲道具 Icon 與自由配件配置。延續多配件裝備、共用戰鬥商品 Visual、批量購買／使用與水母顏色選擇，這版讓所有已擁有配件都能同時裝備，並可在養成主角區拖曳到喜歡的位置。專案仍使用 HTML5、CSS3、Vanilla JavaScript 與 `localStorage`，不需要後端、帳號或 npm 依賴即可遊玩。
+Jelly Lab V2.12.0 是在既有養成與 BOSS 挑戰 MVP 上改善自由配件於頁面縮放和 Responsive 切換時的定位穩定度。延續多配件裝備、共用戰鬥商品 Visual、批量購買／使用與水母顏色選擇，既有配件位置與玩家存檔可直接沿用。專案仍使用 HTML5、CSS3、Vanilla JavaScript 與 `localStorage`，不需要後端、帳號或 npm 依賴即可遊玩。
 
 ## 啟動方式
 
@@ -49,7 +49,7 @@ https://<GitHub帳號>.github.io/<repository名稱>/?debug=1
 │  ├─ animations.css          # 既有養成動畫
 │  ├─ responsive.css          # 既有 Responsive 斷點
 │  ├─ battle.css              # V2 戰鬥、獎勵與 Boss 動畫樣式
-│  └─ v2-1.css                # V2.1/V2.2/V2.11 商品 Visual、數量控制、選色與置中樣式
+│  └─ v2-1.css                # V2.1/V2.2/V2.12 商品 Visual、數量控制、選色與置中樣式
 └─ js/
    ├─ app.js                  # 應用入口、事件路由、畫面切換與 Battle orchestration
    ├─ config.js               # 商品、等級、進化、Boss、攻擊、戰鬥商品與獎勵設定
@@ -201,6 +201,12 @@ https://<GitHub帳號>.github.io/<repository名稱>/?debug=1
 - 新 PNG 已清除背景留白並驗證透明 Alpha；三處共用改用等比例 `contain`，保留完整泵頭、瓶身與文字，不使用 CSS 非等比拉伸。
 - 只更新 PPA+1 素材、Visual 尺寸與快取版本；商品價格、乳霜效果、戰鬥消耗、localStorage 與 Save `version: 5` 均維持不變。
 
+### V2.12 配件縮放定位穩定化
+
+- 水母內新增固定的 `jelly-accessory-layer` 座標層，配件 X／Y 繼續使用既有百分比存檔，不需要 Save Migration。
+- 配件尺寸由相對瀏覽器寬度的 `7vw` 改為相對角色容器的 `11cqw`，頁面縮放、手機與 Desktop 切換時會跟水母同步縮放。
+- 配件編輯模式會暫停水母漂浮動畫，拖曳座標改以固定配件層計算，避免動畫位移造成拖曳誤差。
+
 ## Save Migration 做法
 
 `GAME_CONFIG.version` 目前為 `5`。`storage.js` 讀取既有 `jellyLabSave` 後交由 `normalizeSave()` 正規化：
@@ -307,3 +313,4 @@ Battle 中的 HP、Boss HP、狀態、回合、Battle Log 都只存在 `battle.j
 | V2.9.3：PPA+1 指定水平 2.5、垂直 1.5 | 通過；CSS 使用 `scale(2.5, 1.5)`，外層寬度 50px 以避免泵頭裁切 |
 | V2.10：以 2.5／1.5 配比重做 PPA+1 素材並提高文字清晰度 | 通過；改用自然寬版 PNG、清除非等比 CSS 拉伸，商店／背包／Battle 皆使用固定 Icon 框 |
 | V2.11：PPA+1 垂直比例更新為 2 且保持文字清楚 | 通過；新 PNG 為透明 Alpha，完整按壓瓶以等比例 `contain` 顯示於商店／背包／Battle |
+| V2.12：頁面縮放與 Responsive 切換時配件位置穩定 | 通過；座標固定為角色層百分比、尺寸使用 `11cqw`，既有 accessoryPositions 可直接沿用 |

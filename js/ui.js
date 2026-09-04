@@ -13,7 +13,7 @@ import {
 import { getCollectionProgress, isCollected } from "./collection.js";
 import { getBattleInventorySummary, getInventoryItems, getRewardItems } from "./inventory.js";
 import { getBattleItemQuantity, getExpRequired, getFoodQuantity, getCurrentStage, getNextStage, getStageProgress, getEquippedAccessories } from "./state.js";
-import { renderJellyfish, renderJellyfishPreview, getScene, getSkin } from "./jellyfish.js";
+import { renderJellyfish, renderJellyfishPreview, getScene, getSkin } from "./jellyfish.js?v=2.12.0";
 import { getItemStatus, getShopItems, isEquipped, isRepeatableItem } from "./shop.js";
 import { getBattleActionQuantityLimits, getBossForDisplay } from "./battle.js";
 import { renderBattleItemVisual } from "./components.js";

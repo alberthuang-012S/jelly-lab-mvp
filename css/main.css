@@ -682,6 +682,11 @@ button:disabled {
   transform-origin: center;
 }
 
+.jelly-character.accessory-edit-mode {
+  animation: none;
+  transform: scale(var(--stage-scale));
+}
+
 .jelly-character .jelly-art {
   filter: drop-shadow(0 17px 14px rgba(56, 95, 126, 0.13));
 }
@@ -714,15 +719,27 @@ button:disabled {
   filter: saturate(1.18) drop-shadow(0 0 18px rgba(114, 202, 255, 0.65)) drop-shadow(0 16px 14px rgba(56, 95, 126, 0.14));
 }
 
+.jelly-accessory-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 4;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  container-type: inline-size;
+}
+
 .jelly-accessory {
   position: absolute;
   top: var(--accessory-top, 50%);
   left: var(--accessory-left, 50%);
-  z-index: 3;
+  z-index: 1;
   pointer-events: none;
   line-height: 1;
   white-space: nowrap;
-  font-size: clamp(1.65rem, 7vw, 2.6rem);
+  font-size: 2.35rem;
+  font-size: 11cqw;
   filter: drop-shadow(0 4px 4px rgba(28, 43, 69, 0.13));
   transform: translate(-50%, -50%) rotate(var(--accessory-rotation, 0deg)) scale(var(--accessory-scale, 1));
 }

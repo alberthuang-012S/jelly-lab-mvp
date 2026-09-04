@@ -1,4 +1,4 @@
-/* Jelly Lab V2.1/V2.2/V2.6/V2.7/V2.8 · visual system, quantity controls, onboarding color choice, and alignment */
+/* Jelly Lab V2.1/V2.2/V2.6/V2.7/V2.8/V2.9 · visual system, quantity controls, onboarding color choice, and alignment */
 
 /* Shared battle item visuals */
 
@@ -122,10 +122,10 @@
   width: 42px;
   height: 76px;
   overflow: hidden;
-  border: 1px solid rgba(119, 126, 164, 0.18);
-  border-radius: 11px 11px 14px 14px;
-  background: #e8e9fb;
-  box-shadow: 0 9px 13px rgba(56, 83, 105, 0.14);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
   transform: scale(var(--visual-scale, 1));
 }
 
@@ -134,7 +134,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transform: scale(1.75);
+  transform: scale(1.1);
 }
 
 .tin-visual {
@@ -258,6 +258,10 @@
   justify-self: center;
   align-self: center;
   margin: 0;
+}
+
+.battle-item-icon .bottle-visual {
+  --visual-scale: 0.46;
 }
 
 .battle-item-icon {

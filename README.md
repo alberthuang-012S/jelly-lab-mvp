@@ -1,6 +1,6 @@
-# 水母養成所 Jelly Lab V2.10.0
+# 水母養成所 Jelly Lab V2.11.0
 
-Jelly Lab V2.10.0 是在既有養成與 BOSS 挑戰 MVP 上更新 PPA+1 遊戲道具 Icon 與自由配件配置。延續多配件裝備、共用戰鬥商品 Visual、批量購買／使用與水母顏色選擇，這版讓所有已擁有配件都能同時裝備，並可在養成主角區拖曳到喜歡的位置。專案仍使用 HTML5、CSS3、Vanilla JavaScript 與 `localStorage`，不需要後端、帳號或 npm 依賴即可遊玩。
+Jelly Lab V2.11.0 是在既有養成與 BOSS 挑戰 MVP 上更新 PPA+1 遊戲道具 Icon 與自由配件配置。延續多配件裝備、共用戰鬥商品 Visual、批量購買／使用與水母顏色選擇，這版讓所有已擁有配件都能同時裝備，並可在養成主角區拖曳到喜歡的位置。專案仍使用 HTML5、CSS3、Vanilla JavaScript 與 `localStorage`，不需要後端、帳號或 npm 依賴即可遊玩。
 
 ## 啟動方式
 
@@ -49,7 +49,7 @@ https://<GitHub帳號>.github.io/<repository名稱>/?debug=1
 │  ├─ animations.css          # 既有養成動畫
 │  ├─ responsive.css          # 既有 Responsive 斷點
 │  ├─ battle.css              # V2 戰鬥、獎勵與 Boss 動畫樣式
-│  └─ v2-1.css                # V2.1/V2.2/V2.10 商品 Visual、數量控制、選色與置中樣式
+│  └─ v2-1.css                # V2.1/V2.2/V2.11 商品 Visual、數量控制、選色與置中樣式
 └─ js/
    ├─ app.js                  # 應用入口、事件路由、畫面切換與 Battle orchestration
    ├─ config.js               # 商品、等級、進化、Boss、攻擊、戰鬥商品與獎勵設定
@@ -195,6 +195,12 @@ https://<GitHub帳號>.github.io/<repository名稱>/?debug=1
 - 改用固定 70×70px 的商品 Icon 框與原生圖片比例，不再依賴非等比 CSS 拉伸；背包與 Battle 仍透過既有縮放比例適配欄位。
 - 保留透明背景、按壓瓶輪廓、乳霜效果與內部 `NAP` 保存鍵，未修改遊戲資料或戰鬥規則。
 
+### V2.11 PPA+1 垂直比例更新
+
+- 依需求維持水平 `2.5` 的視覺方向，將垂直比例更新為 `2`，重新製作較高的按壓瓶素材並放大清楚的 `PPA+1` 字樣。
+- 新 PNG 已清除背景留白並驗證透明 Alpha；三處共用改用等比例 `contain`，保留完整泵頭、瓶身與文字，不使用 CSS 非等比拉伸。
+- 只更新 PPA+1 素材、Visual 尺寸與快取版本；商品價格、乳霜效果、戰鬥消耗、localStorage 與 Save `version: 5` 均維持不變。
+
 ## Save Migration 做法
 
 `GAME_CONFIG.version` 目前為 `5`。`storage.js` 讀取既有 `jellyLabSave` 後交由 `normalizeSave()` 正規化：
@@ -300,3 +306,4 @@ Battle 中的 HP、Boss HP、狀態、回合、Battle Log 都只存在 `battle.j
 | V2.9.2：保留 PPA+1 造型並提高水平視覺份量 | 通過；圖片改為 `scale(1.7, 1.35)`，外層欄位尺寸維持不變 |
 | V2.9.3：PPA+1 指定水平 2.5、垂直 1.5 | 通過；CSS 使用 `scale(2.5, 1.5)`，外層寬度 50px 以避免泵頭裁切 |
 | V2.10：以 2.5／1.5 配比重做 PPA+1 素材並提高文字清晰度 | 通過；改用自然寬版 PNG、清除非等比 CSS 拉伸，商店／背包／Battle 皆使用固定 Icon 框 |
+| V2.11：PPA+1 垂直比例更新為 2 且保持文字清楚 | 通過；新 PNG 為透明 Alpha，完整按壓瓶以等比例 `contain` 顯示於商店／背包／Battle |

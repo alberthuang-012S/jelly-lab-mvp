@@ -1,4 +1,4 @@
-/* Jelly Lab V2.1/V2.2/V2.6/V2.7/V2.8/V2.9/V2.9.1/V2.9.2/V2.9.3 · visual system, quantity controls, onboarding color choice, and alignment */
+/* Jelly Lab V2.1/V2.2/V2.6/V2.7/V2.8/V2.9/V2.9.1/V2.9.2/V2.9.3/V2.10 · visual system, quantity controls, onboarding color choice, and alignment */
 
 /* Shared battle item visuals */
 
@@ -119,8 +119,8 @@
 }
 
 .bottle-visual {
-  width: 50px;
-  height: 76px;
+  width: 70px;
+  height: 70px;
   overflow: hidden;
   border: 0;
   border-radius: 0;
@@ -134,7 +134,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transform: scale(2.5, 1.5);
+  transform: none;
 }
 
 .tin-visual {

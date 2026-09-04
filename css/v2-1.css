@@ -1,5 +1,168 @@
 /* Jelly Lab V2.1/V2.2/V2.6/V2.7/V2.8/V2.9/V2.9.1/V2.9.2/V2.9.3/V2.10/V2.11 · visual system, quantity controls, onboarding color choice, and alignment */
 
+/* Shared food package visuals */
+
+.food-product-visual {
+  position: relative;
+  display: grid;
+  width: 100px;
+  height: 80px;
+  flex: 0 0 auto;
+  place-items: center;
+  color: var(--food-text, #ffffff);
+  filter: drop-shadow(0 8px 8px rgba(68, 90, 143, 0.17));
+  pointer-events: none;
+}
+
+.food-product-visual::before,
+.food-product-visual::after {
+  position: absolute;
+  content: "";
+}
+
+.food-product-visual::before {
+  z-index: 0;
+  box-sizing: border-box;
+  width: 82px;
+  height: 58px;
+  border: 2px solid rgba(255, 255, 255, 0.58);
+  border-radius: 12px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.4), transparent 34%), var(--food-accent, #6ca8a0);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.42), inset 0 -6px 9px rgba(48, 66, 75, 0.13), 0 6px 10px rgba(68, 90, 143, 0.12);
+}
+
+.food-product-visual::after {
+  z-index: 1;
+  top: 12px;
+  width: 72px;
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.34);
+  box-shadow: 0 2px 0 rgba(69, 79, 90, 0.12);
+}
+
+.food-package-mark,
+.food-package-label {
+  position: absolute;
+  z-index: 2;
+  display: block;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  line-height: 1;
+  text-align: center;
+}
+
+.food-package-mark {
+  top: 21px;
+  font-size: 1.15rem;
+  text-shadow: 0 1px 2px rgba(44, 52, 64, 0.18);
+}
+
+.food-package-label {
+  right: 7px;
+  bottom: 17px;
+  left: 7px;
+  overflow: hidden;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(44, 52, 64, 0.16);
+}
+
+.food-visual-pineapple-green::before {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.22), transparent 32%), var(--food-accent);
+}
+
+.food-visual-pineapple-green::after {
+  background: repeating-linear-gradient(135deg, rgba(255, 247, 217, 0.42) 0 4px, transparent 4px 8px), var(--food-secondary);
+}
+
+.food-visual-pineapple-yellow::before {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.48), transparent 34%), var(--food-accent);
+}
+
+.food-visual-pineapple-yellow::after {
+  background: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.55) 0 4px, transparent 4px 8px), var(--food-secondary);
+}
+
+.food-visual-chocolate-gold::before {
+  width: 78px;
+  height: 62px;
+  border-radius: 9px;
+  background: linear-gradient(145deg, rgba(255, 237, 151, 0.56), transparent 36%), var(--food-accent);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.58), inset 0 -8px 10px rgba(111, 67, 23, 0.18), 0 6px 10px rgba(68, 90, 143, 0.12);
+}
+
+.food-visual-chocolate-gold::after {
+  top: 11px;
+  width: 66px;
+  height: 8px;
+  background: rgba(255, 246, 199, 0.55);
+}
+
+.food-visual-chocolate-clear::before {
+  width: 82px;
+  height: 62px;
+  border-color: rgba(255, 255, 255, 0.76);
+  border-radius: 10px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.68), rgba(220, 244, 245, 0.28) 48%, rgba(255, 255, 255, 0.58)), var(--food-secondary);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.86), inset 0 -6px 8px rgba(91, 128, 140, 0.11), 0 6px 10px rgba(68, 90, 143, 0.1);
+}
+
+.food-visual-chocolate-clear::after {
+  top: 25px;
+  width: 48px;
+  height: 25px;
+  border: 1px solid rgba(142, 105, 75, 0.26);
+  border-radius: 5px;
+  background: linear-gradient(90deg, #fff8df 0 49%, #c99a70 50% 100%);
+  opacity: 0.82;
+}
+
+.food-visual-breakfast-orange::before {
+  width: 66px;
+  height: 68px;
+  border-radius: 16px 16px 21px 21px;
+  background: linear-gradient(145deg, rgba(255, 235, 199, 0.45), transparent 33%), var(--food-accent);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.5), inset 0 -8px 10px rgba(121, 59, 29, 0.16), 0 7px 10px rgba(68, 90, 143, 0.13);
+}
+
+.food-visual-breakfast-orange::after {
+  top: 8px;
+  width: 52px;
+  height: 10px;
+  border: 2px solid rgba(255, 244, 221, 0.8);
+  border-radius: 50%;
+  background: var(--food-secondary);
+  box-shadow: inset 0 -2px 2px rgba(127, 71, 31, 0.16);
+}
+
+.food-visual-breakfast-orange .food-package-mark {
+  top: 25px;
+}
+
+.food-product-visual.is-compact {
+  transform: scale(0.72);
+}
+
+.food-preview > .food-product-visual {
+  z-index: 1;
+}
+
+.food-icon > .food-product-visual {
+  transform: scale(0.72);
+}
+
+.feed-confirm-icon > .food-product-visual {
+  transform: scale(0.7);
+}
+
+.success-item > .food-product-visual {
+  transform: scale(0.72);
+  transform-origin: center;
+}
+
 /* Shared battle item visuals */
 
 .battle-item-visual {

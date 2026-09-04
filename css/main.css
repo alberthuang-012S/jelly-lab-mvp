@@ -1492,7 +1492,7 @@ button:disabled {
   color: var(--item-accent, var(--yellow));
 }
 
-.food-preview span {
+.food-preview > span:not(.food-product-visual) {
   position: relative;
   z-index: 1;
   font-size: 3.55rem;
@@ -2283,7 +2283,7 @@ button:disabled {
   background: #f5fbfc;
 }
 
-.success-item span {
+.success-item > span:not(.food-product-visual) {
   font-size: 1.7rem;
 }
 

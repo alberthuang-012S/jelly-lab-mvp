@@ -1,6 +1,6 @@
-# 水母養成所 Jelly Lab V2.14.4
+# 水母養成所 Jelly Lab V2.15.0
 
-Jelly Lab V2.14.4 將配件微調工具移到選取配件旁，並取消因 Emoji 視覺中心不同而顯得偏移的大圓形選取框；在窄版畫面會自動避開其他配件，也會依角色展示層的縮放倍率校正工具列座標。配件仍可單指移動、雙指連續縮放與旋轉，既有位置、角度、大小和所有玩家資料皆直接沿用。專案仍使用 HTML5、CSS3、Vanilla JavaScript 與 `localStorage`，不需要後端、帳號或 npm 依賴即可遊玩。
+Jelly Lab V2.15.0 保留既有水母養成、戰鬥與自由配件配置，將養成商店的食物更新為五款新的包裝商品，並以共用 CSS Visual 呈現在商店、背包、餵食確認與購買成功視窗。食物價格與 EXP 統一為 2 點換 1 EXP，前四款沿用原本存檔 ID，第五款 BF02+1 為新增商品；專案仍使用 HTML5、CSS3、Vanilla JavaScript 與 `localStorage`，不需要後端、帳號或 npm 依賴即可遊玩。
 
 ## 啟動方式
 
@@ -49,14 +49,14 @@ https://<GitHub帳號>.github.io/<repository名稱>/?debug=1
 │  ├─ animations.css          # 既有養成動畫
 │  ├─ responsive.css          # 既有 Responsive 斷點
 │  ├─ battle.css              # V2 戰鬥、獎勵與 Boss 動畫樣式
-│  └─ v2-1.css                # V2.1/V2.2/V2.14 商品 Visual、數量控制、選色與置中樣式
+│  └─ v2-1.css                # V2.1/V2.2/V2.14/V2.15 商品 Visual、數量控制、選色與置中樣式
 └─ js/
    ├─ app.js                  # 應用入口、事件路由、畫面切換與 Battle orchestration
    ├─ config.js               # 商品、等級、進化、Boss、攻擊、戰鬥商品與獎勵設定
    ├─ state.js                # Save 結構、版本正規化、數值防呆與物品數量
    ├─ storage.js              # localStorage 讀寫、V1/V2/V3→V4 migration 與清除
    ├─ battle.js               # 純記憶體回合制 Battle Engine 與批量行動
-   ├─ components.js           # 共用戰鬥商品 Visual Component
+   ├─ components.js           # 共用戰鬥與食物商品 Visual Component
    ├─ shop.js                 # 養成商店、戰鬥商店、批量購買與點數檢查
    ├─ inventory.js            # 食物、造型、配件、場景、戰鬥用品與獎勵資料
    ├─ jellyfish.js            # Skin、場景、配件與角色素材組裝
@@ -222,6 +222,14 @@ https://<GitHub帳號>.github.io/<repository名稱>/?debug=1
 - 取消可見圓形背景與邊框，改用淡光和小型選取點；透明觸控範圍固定，不跟配件縮放。
 - Save 結構維持 `version: 6`，不需要 Migration。
 
+### V2.15 食物商品更新
+
+- 養成商店食物改為五款：IEQ+1 晶亮春茶鳳梨酥（墨綠色）、IPS+1 美麗莓果鳳梨酥（黃色）、YSS+2 妖獸獸輕飄飄趙飛燕巧克力（金色包裝）、BBB+2 亮睛睛黃白千里眼巧克力（透明包裝）、BF02+1 早餐品（橘色束口袋裝）。
+- 價格與 EXP 統一採 **2 點換 1 EXP**：20／10、50／25、100／50、200／100、300／150。
+- `food_candy`、`food_cookie`、`food_jelly`、`food_cake` 四個內部 ID 沿用原本存檔鍵，舊玩家的食物數量不會因換名消失；`food_bf02` 為新增商品，初始庫存為 0。
+- 新增 `renderFoodVisual()`，以 CSS 繪製鳳梨酥包裝、金色巧克力、透明巧克力與橘色束口袋；商店、背包、餵食確認與購買成功視窗共用同一套視覺元件。
+- 本版不清除 localStorage，Save `version: 6` 維持不變；既有 points、LV、EXP、親密度、戰鬥用品、Coupon、Skin、配件與場景均照常保留。
+
 ## Save Migration 做法
 
 `GAME_CONFIG.version` 目前為 `6`。`storage.js` 讀取既有 `jellyLabSave` 後交由 `normalizeSave()` 正規化：
@@ -336,3 +344,10 @@ Battle 中的 HP、Boss HP、狀態、回合、Battle Log 都只存在 `battle.j
 | V2.14：配件旁浮動工具列與自動邊界定位 | 通過；桌面與 320px 均能在展示區內定位，並避開配件 |
 | V2.14：取消大圓形選取框並維持透明觸控範圍 | 通過；選取框無可見邊框／背景，44～52px 觸控範圍仍可操作 |
 | V2.14：320px 工具列、拖曳隱藏與重新定位 | 通過；三個配件可逐一切換，工具列不重疊且橫向溢出為 0 |
+| V2.15：五款食物名稱、包裝色系、EXP 與價格 | 通過；IEQ+1／IPS+1／YSS+2／BBB+2／BF02+1 均正確顯示，價格／EXP 皆為 2:1 |
+| V2.15：實際購買五款食物 | 通過；測試存檔 49,440 → 48,770，五款庫存各增加 1 |
+| V2.15：背包餵食 IEQ+1 | 通過；EXP +10、IEQ+1 庫存 ×1 → 移除，成功 Toast 顯示 |
+| V2.15：重新載入後食物與點數保留 | 通過；新分頁載入後仍為 48,770 點，其他四款食物數量仍存在 |
+| V2.15：商店／背包／餵食確認／購買成功共用食物 Visual | 通過；CSS 包裝 Visual 與短代碼標籤均正常產生 |
+| V2.15：320px 食物商店與背包無橫向 Scroll | 通過；`innerWidth`、`documentElement.scrollWidth`、`body.scrollWidth` 均為 320px，卡片右界為 308px |
+| V2.15：瀏覽器錯誤 Log | 通過；本機商店與手機測試頁均未發現 error |

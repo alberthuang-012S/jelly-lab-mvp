@@ -9,14 +9,14 @@ import {
   REWARDS_CONFIG,
   SHOP_CATEGORIES,
   SKINS
-} from "./config.js?v=2.14.4";
-import { getCollectionProgress, isCollected } from "./collection.js";
-import { getBattleInventorySummary, getInventoryItems, getRewardItems } from "./inventory.js";
-import { getBattleItemQuantity, getExpRequired, getFoodQuantity, getCurrentStage, getNextStage, getStageProgress, getEquippedAccessories } from "./state.js?v=2.14.4";
-import { renderJellyfish, renderJellyfishPreview, getScene, getSkin } from "./jellyfish.js?v=2.14.4";
-import { getItemStatus, getShopItems, isEquipped, isRepeatableItem } from "./shop.js";
-import { getBattleActionQuantityLimits, getBossForDisplay } from "./battle.js";
-import { renderBattleItemVisual } from "./components.js";
+} from "./config.js?v=2.15.0";
+import { getCollectionProgress, isCollected } from "./collection.js?v=2.15.0";
+import { getBattleInventorySummary, getInventoryItems, getRewardItems } from "./inventory.js?v=2.15.0";
+import { getBattleItemQuantity, getExpRequired, getFoodQuantity, getCurrentStage, getNextStage, getStageProgress, getEquippedAccessories } from "./state.js?v=2.15.0";
+import { renderJellyfish, renderJellyfishPreview, getScene, getSkin } from "./jellyfish.js?v=2.15.0";
+import { getItemStatus, getShopItems, isEquipped, isRepeatableItem } from "./shop.js?v=2.15.0";
+import { getBattleActionQuantityLimits, getBossForDisplay } from "./battle.js?v=2.15.0";
+import { renderBattleItemVisual, renderFoodVisual } from "./components.js?v=2.15.0";
 
 export function escapeHtml(value) {
   return String(value)
@@ -309,7 +309,7 @@ function renderShopVisual(save, item) {
     `;
   }
 
-  return `<div class="item-visual food-preview"><span>${item.icon}</span><small>+${item.exp} EXP</small></div>`;
+  return `<div class="item-visual food-preview">${renderFoodVisual(item)}<small>+${item.exp} EXP</small></div>`;
 }
 
 function renderShopCard(save, item, shopQuantities = {}) {
@@ -345,7 +345,7 @@ function renderShopCard(save, item, shopQuantities = {}) {
     <article class="shop-card ${isLocked ? "is-locked" : ""} ${isOwned ? "is-owned" : ""} ${isBattleItem ? "is-battle-item" : ""}" style="--item-accent:${item.accent || "#69c6dc"}">
       ${renderShopVisual(save, item)}
       <div class="item-copy">
-        <div class="item-title-row"><h3>${item.icon && !isBattleItem ? `${item.icon} ` : ""}${item.name}</h3>${status.kind === "equipped" ? "<span class=inline-check>✓</span>" : ""}</div>
+        <div class="item-title-row"><h3>${item.type === "food" ? "" : item.icon && !isBattleItem ? `${item.icon} ` : ""}${item.name}</h3>${status.kind === "equipped" ? "<span class=inline-check>✓</span>" : ""}</div>
         <p>${item.description}</p>
         <div class="item-meta"><span>${itemDetail}</span><strong>${item.price === 0 ? "免費" : `✦ ${formatNumber(item.price)}`}</strong></div>
         ${ownedText}
@@ -400,7 +400,7 @@ export function renderShop(container, save, category, shopQuantities = {}) {
 
 function renderInventoryVisual(save, item, category) {
   if (category === "food") {
-    return `<div class="inventory-icon food-icon">${item.icon}</div>`;
+    return `<div class="inventory-icon food-icon">${renderFoodVisual(item, { compact: true })}</div>`;
   }
 
   if (category === "skin") {
@@ -433,7 +433,7 @@ function renderInventoryCard(save, item, category) {
   return `
     <article class="inventory-card ${equipped ? "is-equipped" : ""} ${category === "battle" ? "is-battle-inventory" : ""}">
       ${renderInventoryVisual(save, item, category)}
-      <div class="inventory-copy"><h3>${item.icon && category !== "skin" && category !== "scene" && category !== "battle" ? `${item.icon} ` : ""}${item.name}</h3><p>${itemDescription}</p></div>
+      <div class="inventory-copy"><h3>${category === "food" || category === "skin" || category === "scene" || category === "battle" ? "" : item.icon ? `${item.icon} ` : ""}${item.name}</h3><p>${itemDescription}</p></div>
       <div class="inventory-actions">
         ${category === "food" || category === "battle" ? `<span class="quantity-badge">×${quantity}</span>` : equipped ? `<span class="equipped-label">${isAccessory ? "✓ 已裝備" : "✓ 使用中"}</span>` : ""}
         <button class="small-action ${equipped ? "is-selected" : ""}" data-action="${action}" data-id="${item.id}" ${equipped && !isAccessory ? "disabled" : ""}>${buttonLabel}</button>
@@ -798,7 +798,7 @@ export function showPurchaseSuccess(item, onEquip, quantity = 1) {
     eyebrow: "JELLY LAB · NEW ARRIVAL",
     title: "🎉 購買成功！",
     className: "success-modal",
-    body: `<div class="success-item"><span>${item.icon || "✦"}</span><strong>獲得：${item.name}${quantityLabel}</strong></div><p>${item.description}</p>`,
+    body: `<div class="success-item">${item.type === "food" ? renderFoodVisual(item, { compact: true }) : `<span>${item.icon || "✦"}</span>`}<strong>獲得：${item.name}${quantityLabel}</strong></div><p>${item.description}</p>`,
     actions: canEquip
       ? [{ label: "稍後", className: "button-quiet" }, { label: "立即裝備", className: "button-primary", onClick: onEquip }]
       : [{ label: "好的", className: "button-primary" }]

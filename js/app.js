@@ -10,11 +10,11 @@ import {
   QUANTITY_CONFIG,
   SCENES,
   SKINS
-} from "./config.js?v=2.14.4";
+} from "./config.js?v=2.15.0";
 import { trackEvent } from "./analytics.js";
-import { feedFood, getInventoryItems } from "./inventory.js";
-import { getScene } from "./jellyfish.js?v=2.14.4";
-import { purchaseItem, getShopItems } from "./shop.js";
+import { feedFood, getInventoryItems } from "./inventory.js?v=2.15.0";
+import { getScene } from "./jellyfish.js?v=2.15.0";
+import { purchaseItem, getShopItems } from "./shop.js?v=2.15.0";
 import {
   addBattleItem,
   addExp,
@@ -36,7 +36,7 @@ import {
   petJellyfish,
   setAccessoryPosition,
   unequipAccessory
-} from "./state.js?v=2.14.4";
+} from "./state.js?v=2.15.0";
 import {
   beginPlayerAction,
   claimBossReward,
@@ -50,8 +50,8 @@ import {
   recordBossVictory,
   resetBossReward,
   resolveBossTurn
-} from "./battle.js";
-import { clearSave, createAndPersistSave, loadSave, persistSave } from "./storage.js?v=2.14.4";
+} from "./battle.js?v=2.15.0";
+import { clearSave, createAndPersistSave, loadSave, persistSave } from "./storage.js?v=2.15.0";
 import {
   closeModal,
   escapeHtml,
@@ -71,7 +71,8 @@ import {
   showPurchaseSuccess,
   showToast,
   updateHeader
-} from "./ui.js?v=2.14.4";
+} from "./ui.js?v=2.15.0";
+import { renderFoodVisual } from "./components.js?v=2.15.0";
 
 let save = loadSave();
 let currentView = "home";
@@ -679,7 +680,7 @@ function openFeedModal(food) {
   const quantity = getFoodQuantity(save, food.id);
   openConfirm({
     title: `餵給${escapeHtml(save.jellyfish.name)}？`,
-    body: `<div class="feed-confirm"><span class="feed-confirm-icon">${food.icon}</span><div><strong>${food.name}</strong><p>EXP +${food.exp} · 背包剩餘 ×${quantity}</p></div></div>`,
+    body: `<div class="feed-confirm"><span class="feed-confirm-icon">${renderFoodVisual(food, { compact: true })}</span><div><strong>${food.name}</strong><p>EXP +${food.exp} · 背包剩餘 ×${quantity}</p></div></div>`,
     confirmLabel: "餵食",
     onConfirm: () => {
       const result = feedFood(save, food);

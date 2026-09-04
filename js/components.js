@@ -49,6 +49,26 @@ function renderBottle(item, modifier) {
   `;
 }
 
+function renderFoodPackage(item, modifier) {
+  const accent = safeColor(item?.visualAccent, "#245449");
+  const secondary = safeColor(item?.visualSecondary, accent);
+  const text = safeColor(item?.visualText, "#ffffff");
+  const mark = item?.visualMark || "✦";
+  const label = item?.shortName || item?.name || "食物";
+
+  return `
+    <span class="food-product-visual food-visual-${item?.visualType || "fallback"}${modifier}" style="--food-accent:${accent};--food-secondary:${secondary};--food-text:${text}" aria-hidden="true">
+      <span class="food-package-mark">${mark}</span>
+      <span class="food-package-label">${label}</span>
+    </span>
+  `;
+}
+
+export function renderFoodVisual(item, options = {}) {
+  const modifier = options.compact ? " is-compact" : "";
+  return renderFoodPackage(item, modifier);
+}
+
 export function renderBattleItemVisual(item, options = {}) {
   const modifier = options.compact ? " is-compact" : "";
 

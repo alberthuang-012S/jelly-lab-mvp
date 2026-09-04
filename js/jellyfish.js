@@ -1,5 +1,5 @@
-import { ACCESSORIES, JELLYFISH_COLORS, SCENES, SKINS } from "./config.js";
-import { getCurrentStage } from "./state.js";
+import { ACCESSORIES, JELLYFISH_COLORS, SCENES, SKINS } from "./config.js?v=2.13.0";
+import { getCurrentStage } from "./state.js?v=2.13.0";
 
 export function getSkin(skinId) {
   return SKINS.find((skin) => skin.id === skinId) || SKINS[0];
@@ -38,7 +38,7 @@ function getAccessoryList(save, options) {
   return equippedAccessoryIds.map((accessoryId) => getAccessory(accessoryId)).filter(Boolean);
 }
 
-function renderJellyfishMarkup({ skin, accessories = [], stage, baseColorId, accessoryPositions = {}, accessoryEditMode = false, actionClass = "" }) {
+function renderJellyfishMarkup({ skin, accessories = [], stage, baseColorId, accessoryPositions = {}, accessoryEditMode = false, selectedAccessoryId = null, actionClass = "" }) {
   const baseColor = getBaseColor(baseColorId);
   const hasBaseColor = skin.id === "normal";
   const accessoryNames = accessories.map((accessory) => accessory.name).join("、");
@@ -46,17 +46,20 @@ function renderJellyfishMarkup({ skin, accessories = [], stage, baseColorId, acc
   const spriteStyle = `--skin-accent:${skin.accent};--jelly-base-color:${baseColor.color};--jelly-hue-rotate:${baseColor.hueRotate};--jelly-saturation:${baseColor.saturation}`;
 
   return `
-    <div class="jelly-character skin-${skin.id} stage-${stage.stage}${hasBaseColor ? " has-base-color" : ""}${accessoryEditMode ? " accessory-edit-mode" : ""}${actionClass ? ` ${actionClass}` : ""}" style="${spriteStyle}" role="img" aria-label="${accessibilityName}">
+    <div class="jelly-character skin-${skin.id} stage-${stage.stage}${hasBaseColor ? " has-base-color" : ""}${accessoryEditMode ? " accessory-edit-mode" : ""}${actionClass ? ` ${actionClass}` : ""}" style="${spriteStyle}" role="${accessoryEditMode ? "group" : "img"}" aria-label="${accessibilityName}">
       <div class="jelly-art" aria-hidden="true">
         <img class="jelly-image" src="${skin.asset}" alt="" draggable="false" />
       </div>
       <div class="jelly-accessory-layer">
         ${accessories.map((accessory) => {
           const position = accessoryPositions[accessory.id] || accessory.defaultPosition || { x: 50, y: 50 };
-          const rotation = Number.isFinite(Number(accessory.defaultPosition?.rotation)) ? Number(accessory.defaultPosition.rotation) : 0;
-          const scale = Number.isFinite(Number(accessory.defaultPosition?.scale)) ? Number(accessory.defaultPosition.scale) : 1;
-          const dragAttributes = accessoryEditMode ? 'role="button" tabindex="0" aria-grabbed="false"' : "";
-          return `<span class="jelly-accessory${accessoryEditMode ? " is-draggable" : ""}" data-accessory-id="${accessory.id}" data-accessory-slot="${accessory.slot || ""}" style="--accessory-left:${position.x}%;--accessory-top:${position.y}%;--accessory-rotation:${rotation}deg;--accessory-scale:${scale}" aria-label="${accessory.name}" ${dragAttributes}>${accessory.icon}</span>`;
+          const fallbackRotation = Number.isFinite(Number(accessory.defaultPosition?.rotation)) ? Number(accessory.defaultPosition.rotation) : 0;
+          const fallbackScale = Number.isFinite(Number(accessory.defaultPosition?.scale)) ? Number(accessory.defaultPosition.scale) : 1;
+          const rotation = Number.isFinite(Number(position.rotation)) ? Number(position.rotation) : fallbackRotation;
+          const scale = Number.isFinite(Number(position.scale)) ? Number(position.scale) : fallbackScale;
+          const isSelected = accessoryEditMode && selectedAccessoryId === accessory.id;
+          const dragAttributes = accessoryEditMode ? `role="button" tabindex="0" aria-grabbed="false" aria-pressed="${isSelected}"` : "";
+          return `<span class="jelly-accessory${accessoryEditMode ? " is-draggable" : ""}${isSelected ? " is-selected" : ""}" data-accessory-id="${accessory.id}" data-accessory-slot="${accessory.slot || ""}" style="--accessory-left:${position.x}%;--accessory-top:${position.y}%;--accessory-rotation:${rotation}deg;--accessory-scale:${scale}" aria-label="${accessory.name}" ${dragAttributes}>${accessory.icon}</span>`;
         }).join("")}
       </div>
       <span class="jelly-shine" aria-hidden="true"></span>
@@ -78,6 +81,7 @@ export function renderJellyfish(save, options = {}) {
     baseColorId,
     accessoryPositions,
     accessoryEditMode: options.accessoryEditMode === true,
+    selectedAccessoryId: options.selectedAccessoryId || null,
     actionClass: options.actionClass
   });
 }

@@ -1,5 +1,5 @@
-import { GAME_CONFIG } from "./config.js";
-import { createDefaultSave, normalizeSave, applyDailyReset } from "./state.js";
+import { GAME_CONFIG } from "./config.js?v=2.13.0";
+import { createDefaultSave, normalizeSave, applyDailyReset } from "./state.js?v=2.13.0";
 
 export function loadSave() {
   try {
@@ -24,11 +24,18 @@ export function loadSave() {
     }
 
     const didReset = applyDailyReset(save);
+    const accessoryPositions = parsed.jellyfish?.accessoryPositions;
+    const needsAccessoryTransformMigration = accessoryPositions
+      && !Array.isArray(accessoryPositions)
+      && Object.values(accessoryPositions).some((position) => {
+        return !Number.isFinite(Number(position?.rotation)) || !Number.isFinite(Number(position?.scale));
+      });
     const needsMigration = parsed.version !== GAME_CONFIG.version
       || !parsed.jellyfish?.baseColor
       || !Array.isArray(parsed.jellyfish?.equippedAccessories)
       || !parsed.jellyfish?.accessoryPositions
       || Array.isArray(parsed.jellyfish?.accessoryPositions)
+      || needsAccessoryTransformMigration
       || !parsed.inventory?.battleItems
       || !parsed.bossProgress
       || !parsed.rewards;

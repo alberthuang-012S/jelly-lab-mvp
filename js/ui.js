@@ -1,4 +1,6 @@
 import {
+  ACCESSORIES,
+  ACCESSORY_LAYOUT_CONFIG,
   BATTLE_CONFIG,
   BATTLE_SHOP_GROUPS,
   BATTLE_SHOP_ITEMS,
@@ -9,11 +11,11 @@ import {
   REWARDS_CONFIG,
   SHOP_CATEGORIES,
   SKINS
-} from "./config.js";
+} from "./config.js?v=2.13.0";
 import { getCollectionProgress, isCollected } from "./collection.js";
 import { getBattleInventorySummary, getInventoryItems, getRewardItems } from "./inventory.js";
-import { getBattleItemQuantity, getExpRequired, getFoodQuantity, getCurrentStage, getNextStage, getStageProgress, getEquippedAccessories } from "./state.js";
-import { renderJellyfish, renderJellyfishPreview, getScene, getSkin } from "./jellyfish.js?v=2.12.0";
+import { getAccessoryPosition, getBattleItemQuantity, getExpRequired, getFoodQuantity, getCurrentStage, getNextStage, getStageProgress, getEquippedAccessories } from "./state.js?v=2.13.0";
+import { renderJellyfish, renderJellyfishPreview, getScene, getSkin } from "./jellyfish.js?v=2.13.0";
 import { getItemStatus, getShopItems, isEquipped, isRepeatableItem } from "./shop.js";
 import { getBattleActionQuantityLimits, getBossForDisplay } from "./battle.js";
 import { renderBattleItemVisual } from "./components.js";
@@ -91,8 +93,9 @@ function renderStageTrack(save) {
   `;
 }
 
-function renderAccessoryLayoutControls(save, accessoryEditMode = false) {
-  const equippedCount = getEquippedAccessories(save).length;
+function renderAccessoryLayoutControls(save, accessoryEditMode = false, selectedAccessoryId = null) {
+  const equippedIds = getEquippedAccessories(save);
+  const equippedCount = equippedIds.length;
 
   if (!equippedCount) {
     return `
@@ -103,19 +106,47 @@ function renderAccessoryLayoutControls(save, accessoryEditMode = false) {
     `;
   }
 
+  const activeAccessoryId = equippedIds.includes(selectedAccessoryId) ? selectedAccessoryId : equippedIds[0];
+  const activeAccessory = ACCESSORIES.find((accessory) => accessory.id === activeAccessoryId);
+  const transform = activeAccessory ? getAccessoryPosition(save, activeAccessory.id) : ACCESSORY_LAYOUT_CONFIG.defaultPosition;
+
   return `
     <section class="accessory-layout-card ${accessoryEditMode ? "is-editing" : ""}">
-      <div class="accessory-layout-copy"><span class="card-kicker">FREE ACCESSORY LAYOUT</span><strong>自由裝備 · ${equippedCount} 件</strong><p>${accessoryEditMode ? "拖曳主角上的配件到喜歡的位置，放開後會自動保存。" : "配件可以同時裝備，不同配件也能放在你喜歡的位置。"}</p></div>
+      <div class="accessory-layout-copy"><span class="card-kicker">FREE ACCESSORY LAYOUT</span><strong>自由裝備 · ${equippedCount} 件</strong><p>${accessoryEditMode ? "單指移動；雙指可連續縮放與旋轉。放開後自動保存。" : "配件可以同時裝備，不同配件也能放在你喜歡的位置。"}</p></div>
       <div class="accessory-layout-actions">
         <button class="small-action ${accessoryEditMode ? "button-primary" : ""}" data-action="toggle-accessory-editor">${accessoryEditMode ? "完成調整" : "調整位置"}</button>
-        ${accessoryEditMode ? `<button class="small-action button-quiet" data-action="reset-accessory-positions">回復預設</button>` : ""}
       </div>
+      ${accessoryEditMode && activeAccessory ? `
+        <div class="accessory-transform-panel" aria-label="配件微調控制">
+          <div class="accessory-transform-heading">
+            <span class="accessory-transform-icon" aria-hidden="true">${activeAccessory.icon}</span>
+            <div><span class="card-kicker">目前選取</span><strong data-accessory-selected-name>${escapeHtml(activeAccessory.name)}</strong></div>
+            <div class="accessory-transform-values" aria-live="polite">
+              <output data-accessory-rotation>旋轉 ${Math.round(transform.rotation)}°</output>
+              <output data-accessory-scale>大小 ${transform.scale.toFixed(2)}×</output>
+            </div>
+          </div>
+          <div class="accessory-transform-actions">
+            <div class="accessory-transform-group" aria-label="旋轉配件">
+              <button class="small-action button-quiet" data-action="adjust-accessory-transform" data-transform="rotation" data-delta="-${ACCESSORY_LAYOUT_CONFIG.rotationStep}" aria-label="向左旋轉 ${ACCESSORY_LAYOUT_CONFIG.rotationStep} 度">↶ ${ACCESSORY_LAYOUT_CONFIG.rotationStep}°</button>
+              <button class="small-action button-quiet" data-action="adjust-accessory-transform" data-transform="rotation" data-delta="${ACCESSORY_LAYOUT_CONFIG.rotationStep}" aria-label="向右旋轉 ${ACCESSORY_LAYOUT_CONFIG.rotationStep} 度">↷ ${ACCESSORY_LAYOUT_CONFIG.rotationStep}°</button>
+            </div>
+            <div class="accessory-transform-group" aria-label="縮放配件">
+              <button class="small-action button-quiet" data-action="adjust-accessory-transform" data-transform="scale" data-delta="-${ACCESSORY_LAYOUT_CONFIG.scaleStep}" aria-label="縮小配件">− 縮小</button>
+              <button class="small-action button-quiet" data-action="adjust-accessory-transform" data-transform="scale" data-delta="${ACCESSORY_LAYOUT_CONFIG.scaleStep}" aria-label="放大配件">＋ 放大</button>
+            </div>
+            <button class="small-action" data-action="reset-selected-accessory">重設目前配件</button>
+          </div>
+          <small class="accessory-transform-hint">旋轉限制 ±180° · 大小限制 ${ACCESSORY_LAYOUT_CONFIG.minScale.toFixed(1)}～${ACCESSORY_LAYOUT_CONFIG.maxScale.toFixed(1)} 倍</small>
+        </div>
+      ` : ""}
     </section>
   `;
 }
 
 export function renderHome(container, save, options = {}) {
   const accessoryEditMode = options.accessoryEditMode === true;
+  const selectedAccessoryId = options.selectedAccessoryId || null;
   const jellyfish = save.jellyfish;
   const stage = getCurrentStage(save);
   const nextStage = getNextStage(save);
@@ -155,11 +186,11 @@ export function renderHome(container, save, options = {}) {
           <span class="star star-a">✦</span>
           <span class="star star-b">✦</span>
           <div id="jelly-display" class="jelly-display">
-            ${renderJellyfish(save, { accessoryEditMode })}
+            ${renderJellyfish(save, { accessoryEditMode, selectedAccessoryId })}
           </div>
         </div>
 
-        ${renderAccessoryLayoutControls(save, accessoryEditMode)}
+        ${renderAccessoryLayoutControls(save, accessoryEditMode, selectedAccessoryId)}
 
         <div class="jelly-card-footer">
           <div>

@@ -1,6 +1,6 @@
-# 水母養成所 Jelly Lab V2.12.0
+# 水母養成所 Jelly Lab V2.13.0
 
-Jelly Lab V2.12.0 是在既有養成與 BOSS 挑戰 MVP 上改善自由配件於頁面縮放和 Responsive 切換時的定位穩定度。延續多配件裝備、共用戰鬥商品 Visual、批量購買／使用與水母顏色選擇，既有配件位置與玩家存檔可直接沿用。專案仍使用 HTML5、CSS3、Vanilla JavaScript 與 `localStorage`，不需要後端、帳號或 npm 依賴即可遊玩。
+Jelly Lab V2.13.0 在既有自由配件配置上加入觸控手勢與精細微調。配件可單指移動、雙指連續縮放與旋轉，也能用 5°／0.05 倍按鈕精細調整；既有配件位置與所有玩家資料都會透過 Save Migration 保留。專案仍使用 HTML5、CSS3、Vanilla JavaScript 與 `localStorage`，不需要後端、帳號或 npm 依賴即可遊玩。
 
 ## 啟動方式
 
@@ -49,7 +49,7 @@ https://<GitHub帳號>.github.io/<repository名稱>/?debug=1
 │  ├─ animations.css          # 既有養成動畫
 │  ├─ responsive.css          # 既有 Responsive 斷點
 │  ├─ battle.css              # V2 戰鬥、獎勵與 Boss 動畫樣式
-│  └─ v2-1.css                # V2.1/V2.2/V2.12 商品 Visual、數量控制、選色與置中樣式
+│  └─ v2-1.css                # V2.1/V2.2/V2.13 商品 Visual、數量控制、選色與置中樣式
 └─ js/
    ├─ app.js                  # 應用入口、事件路由、畫面切換與 Battle orchestration
    ├─ config.js               # 商品、等級、進化、Boss、攻擊、戰鬥商品與獎勵設定
@@ -207,9 +207,16 @@ https://<GitHub帳號>.github.io/<repository名稱>/?debug=1
 - 配件尺寸由相對瀏覽器寬度的 `7vw` 改為相對角色容器的 `11cqw`，頁面縮放、手機與 Desktop 切換時會跟水母同步縮放。
 - 配件編輯模式會暫停水母漂浮動畫，拖曳座標改以固定配件層計算，避免動畫位移造成拖曳誤差。
 
+### V2.13 強化版配件手勢
+
+- 編輯模式支援單指／滑鼠拖曳，以及雙指連續縮放、旋轉與同步位移；使用 Pointer Events、Pointer Capture 與 `requestAnimationFrame` 維持觸控穩定度。
+- 旋轉可在 -180°～180° 間調整，接近 0°／±90°／±180° 時輕微吸附；大小限制為 0.6～1.6 倍。
+- 控制面板提供每次 5° 旋轉、0.05 倍縮放、即時數值與「重設目前配件」，兼顧手機手勢與桌機精細操作。
+- Save 提升至 `version: 6`；既有 X／Y 位置保留，缺少的 `rotation`／`scale` 會依各配件預設值補齊。
+
 ## Save Migration 做法
 
-`GAME_CONFIG.version` 目前為 `5`。`storage.js` 讀取既有 `jellyLabSave` 後交由 `normalizeSave()` 正規化：
+`GAME_CONFIG.version` 目前為 `6`。`storage.js` 讀取既有 `jellyLabSave` 後交由 `normalizeSave()` 正規化：
 
 1. 保留舊玩家的 points、LV、EXP、親密度、裝備、背包、圖鑑與每日資料。
 2. 缺少的 `jellyfish.baseColor` 自動補為 `yellow`，保留原本 `equippedSkin`。
@@ -217,9 +224,10 @@ https://<GitHub帳號>.github.io/<repository名稱>/?debug=1
 4. 缺少的 `bossProgress.agingMonster` 補上 `defeated`、`clearCount`、`rewardClaimed`。
 5. 缺少的 `rewards.coupons` 補成空陣列，既有 Coupon 完整保留並去除重複 ID。
 6. 缺少 `jellyfish.equippedAccessories` 時，若存在舊的單一 `equippedAccessory` 就轉成一件配件陣列；現在不再依 `slot` 過濾，因此同類型配件也能並存。
-7. 缺少 `jellyfish.accessoryPositions` 時，依 `config.js` 每件配件的 `defaultPosition` 補齊 X／Y；既有合法位置會保留，超出可視範圍的值會被限制在 4～96%。
-8. 版本不是 5 或缺少自由配件欄位時，將正規化結果回寫 localStorage；不會因升級主動清除舊存檔。
-9. 新建立的 Save 與 Reset Save 走 `createDefaultSave()`，使用 50,000 點並保存選定的 `baseColor`；既有 Save 的 points 不會被自動改寫。
+7. 缺少 `jellyfish.accessoryPositions` 時，依 `config.js` 每件配件的 `defaultPosition` 補齊；既有合法 X／Y 會保留並限制在 4～96%。
+8. V5 配件位置缺少 `rotation`／`scale` 時，依各配件預設值補齊；旋轉限制為 ±180°，大小限制為 0.6～1.6 倍。
+9. 版本不是 6 或缺少自由配件欄位時，將正規化結果回寫 localStorage；不會因升級主動清除舊存檔。
+10. 新建立的 Save 與 Reset Save 走 `createDefaultSave()`，使用 50,000 點並保存選定的 `baseColor`；既有 Save 的 points 不會被自動改寫。
 
 Battle 中的 HP、Boss HP、狀態、回合、Battle Log 都只存在 `battle.js` 的記憶體狀態，離開或 Refresh 即結束該場戰鬥，不會污染養成系統資料。
 
@@ -314,3 +322,6 @@ Battle 中的 HP、Boss HP、狀態、回合、Battle Log 都只存在 `battle.j
 | V2.10：以 2.5／1.5 配比重做 PPA+1 素材並提高文字清晰度 | 通過；改用自然寬版 PNG、清除非等比 CSS 拉伸，商店／背包／Battle 皆使用固定 Icon 框 |
 | V2.11：PPA+1 垂直比例更新為 2 且保持文字清楚 | 通過；新 PNG 為透明 Alpha，完整按壓瓶以等比例 `contain` 顯示於商店／背包／Battle |
 | V2.12：頁面縮放與 Responsive 切換時配件位置穩定 | 通過；座標固定為角色層百分比、尺寸使用 `11cqw`，既有 accessoryPositions 可直接沿用 |
+| V2.13：配件 5° 旋轉與 0.05 倍縮放按鈕 | 通過；實測上下限固定為 ±180° 與 0.6～1.6 倍，重設後回到商品預設值 |
+| V2.13：單指拖曳與雙指縮放／旋轉 | 通過；Chrome 觸控實測由 -6°／1.00 倍連續變為 24°／1.40 倍，滑鼠拖曳也正常 |
+| V2.13：Save V5 → V6 保留 X／Y 並補 rotation／scale | 通過；舊 X／Y 保留，角度與大小補預設值，重新載入後手勢結果仍存在 |

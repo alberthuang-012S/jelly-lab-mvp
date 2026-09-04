@@ -10,10 +10,10 @@ import {
   QUANTITY_CONFIG,
   SCENES,
   SKINS
-} from "./config.js";
+} from "./config.js?v=2.13.0";
 import { trackEvent } from "./analytics.js";
 import { feedFood, getInventoryItems } from "./inventory.js";
-import { getScene } from "./jellyfish.js?v=2.12.0";
+import { getScene } from "./jellyfish.js?v=2.13.0";
 import { purchaseItem, getShopItems } from "./shop.js";
 import {
   addBattleItem,
@@ -31,11 +31,12 @@ import {
   getAccessoryPosition,
   getEquippedAccessories,
   getFoodQuantity,
+  resetAccessoryPosition,
   resetAccessoryPositions,
   petJellyfish,
   setAccessoryPosition,
   unequipAccessory
-} from "./state.js";
+} from "./state.js?v=2.13.0";
 import {
   beginPlayerAction,
   claimBossReward,
@@ -50,7 +51,7 @@ import {
   resetBossReward,
   resolveBossTurn
 } from "./battle.js";
-import { clearSave, createAndPersistSave, loadSave, persistSave } from "./storage.js";
+import { clearSave, createAndPersistSave, loadSave, persistSave } from "./storage.js?v=2.13.0";
 import {
   closeModal,
   escapeHtml,
@@ -70,7 +71,7 @@ import {
   showPurchaseSuccess,
   showToast,
   updateHeader
-} from "./ui.js?v=2.12.0";
+} from "./ui.js?v=2.13.0";
 
 let save = loadSave();
 let currentView = "home";
@@ -84,7 +85,8 @@ let pendingJellyfishName = "";
 let selectedBaseColor = GAME_CONFIG.initialBaseColor;
 let debugCollapsed = true;
 let accessoryEditMode = false;
-let accessoryDrag = null;
+let selectedAccessoryId = null;
+let accessoryGesture = null;
 const debugEnabled = new URLSearchParams(window.location.search).get("debug") === "1";
 
 const viewIds = ["home", "shop", "challenge", "inventory", "collection"];
@@ -161,7 +163,14 @@ function renderViews() {
 
   if (!save) return;
 
-  renderHome(containers.home, save, { accessoryEditMode });
+  if (accessoryEditMode) {
+    const equippedAccessories = getEquippedAccessories(save);
+    if (!equippedAccessories.includes(selectedAccessoryId)) {
+      selectedAccessoryId = equippedAccessories[0] || null;
+    }
+  }
+
+  renderHome(containers.home, save, { accessoryEditMode, selectedAccessoryId });
   renderShop(containers.shop, save, shopCategory, shopQuantities);
   renderChallenge(containers.challenge, save, battleState, battleActionSelection);
   renderInventory(containers.inventory, save, inventoryCategory);
@@ -206,6 +215,68 @@ function clampAccessoryCoordinate(value, minimum, maximum) {
   return Math.min(maximum, Math.max(minimum, value));
 }
 
+function getPointerDistance(first, second) {
+  return Math.hypot(second.x - first.x, second.y - first.y);
+}
+
+function getPointerAngle(first, second) {
+  return Math.atan2(second.y - first.y, second.x - first.x) * (180 / Math.PI);
+}
+
+function getPointerCenter(first, second) {
+  return {
+    x: (first.x + second.x) / 2,
+    y: (first.y + second.y) / 2
+  };
+}
+
+function normalizeAngleDelta(value) {
+  let angle = value;
+  while (angle > 180) angle -= 360;
+  while (angle < -180) angle += 360;
+  return angle;
+}
+
+function snapAccessoryRotation(value) {
+  const clamped = clampAccessoryCoordinate(value, ACCESSORY_LAYOUT_CONFIG.minRotation, ACCESSORY_LAYOUT_CONFIG.maxRotation);
+  const snapAngle = ACCESSORY_LAYOUT_CONFIG.snapAngles.find((angle) => Math.abs(clamped - angle) <= ACCESSORY_LAYOUT_CONFIG.snapThreshold);
+  return snapAngle ?? clamped;
+}
+
+function applyAccessoryTransformToDom(target, transform) {
+  target.style.setProperty("--accessory-left", `${transform.x}%`);
+  target.style.setProperty("--accessory-top", `${transform.y}%`);
+  target.style.setProperty("--accessory-rotation", `${transform.rotation}deg`);
+  target.style.setProperty("--accessory-scale", transform.scale);
+
+  const rotationOutput = document.querySelector("[data-accessory-rotation]");
+  const scaleOutput = document.querySelector("[data-accessory-scale]");
+  if (rotationOutput) rotationOutput.textContent = `旋轉 ${Math.round(transform.rotation)}°`;
+  if (scaleOutput) scaleOutput.textContent = `大小 ${Number(transform.scale).toFixed(2)}×`;
+}
+
+function selectAccessory(accessoryId) {
+  if (!getEquippedAccessories(save).includes(accessoryId)) return false;
+
+  selectedAccessoryId = accessoryId;
+  document.querySelectorAll("#jelly-display .jelly-accessory.is-draggable").forEach((accessory) => {
+    const isSelected = accessory.dataset.accessoryId === accessoryId;
+    accessory.classList.toggle("is-selected", isSelected);
+    accessory.setAttribute("aria-pressed", String(isSelected));
+  });
+
+  const accessory = ACCESSORIES.find((item) => item.id === accessoryId);
+  const selectedName = document.querySelector("[data-accessory-selected-name]");
+  const selectedIcon = document.querySelector(".accessory-transform-icon");
+  if (selectedName && accessory) selectedName.textContent = accessory.name;
+  if (selectedIcon && accessory) selectedIcon.textContent = accessory.icon;
+  if (accessory) {
+    const target = document.querySelector(`#jelly-display .jelly-accessory[data-accessory-id="${accessoryId}"]`);
+    if (target) applyAccessoryTransformToDom(target, getAccessoryPosition(save, accessoryId));
+  }
+  return true;
+}
+
 function getAccessoryDragTarget(event) {
   if (!accessoryEditMode || currentView !== "home" || !save) {
     return null;
@@ -217,7 +288,7 @@ function getAccessoryDragTarget(event) {
 
 function handleAccessoryPointerDown(event) {
   const target = getAccessoryDragTarget(event);
-  if (!target || accessoryDrag) return;
+  if (!target) return;
 
   const coordinateLayer = target.closest(".jelly-accessory-layer");
   const rect = coordinateLayer?.getBoundingClientRect();
@@ -225,67 +296,127 @@ function handleAccessoryPointerDown(event) {
 
   if (!coordinateLayer || !rect || !rect.width || !rect.height || !accessoryId) return;
 
-  const currentPosition = getAccessoryPosition(save, accessoryId);
-  const centerX = rect.left + (currentPosition.x / 100) * rect.width;
-  const centerY = rect.top + (currentPosition.y / 100) * rect.height;
+  if (accessoryGesture && accessoryGesture.accessoryId !== accessoryId) return;
+  selectAccessory(accessoryId);
 
-  accessoryDrag = {
-    accessoryId,
-    coordinateLayer,
-    pointerId: event.pointerId,
-    target,
-    offsetX: event.clientX - centerX,
-    offsetY: event.clientY - centerY,
-    position: currentPosition
-  };
+  if (!accessoryGesture) {
+    accessoryGesture = {
+      accessoryId,
+      coordinateLayer,
+      target,
+      pointers: new Map(),
+      currentTransform: getAccessoryPosition(save, accessoryId),
+      frameId: null
+    };
+  }
+
+  if (accessoryGesture.pointers.size >= 2 || accessoryGesture.pointers.has(event.pointerId)) return;
+
+  accessoryGesture.pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+  const pointerValues = [...accessoryGesture.pointers.values()];
+
+  if (pointerValues.length === 1) {
+    accessoryGesture.mode = "drag";
+    accessoryGesture.startTransform = { ...accessoryGesture.currentTransform };
+    accessoryGesture.startPointer = { ...pointerValues[0] };
+  } else {
+    accessoryGesture.mode = "transform";
+    accessoryGesture.startTransform = { ...accessoryGesture.currentTransform };
+    accessoryGesture.startDistance = Math.max(1, getPointerDistance(pointerValues[0], pointerValues[1]));
+    accessoryGesture.startAngle = getPointerAngle(pointerValues[0], pointerValues[1]);
+    accessoryGesture.startCenter = getPointerCenter(pointerValues[0], pointerValues[1]);
+    target.classList.add("is-transforming");
+  }
 
   target.classList.add("is-dragging");
   target.setAttribute("aria-grabbed", "true");
-  target.setPointerCapture?.(event.pointerId);
+  try {
+    target.setPointerCapture?.(event.pointerId);
+  } catch (error) {
+    console.debug("Pointer capture unavailable for this gesture.", error);
+  }
   event.preventDefault();
 }
 
 function handleAccessoryPointerMove(event) {
-  if (!accessoryDrag || accessoryDrag.pointerId !== event.pointerId) return;
+  if (!accessoryGesture?.pointers.has(event.pointerId)) return;
 
-  const { coordinateLayer, offsetX, offsetY, target } = accessoryDrag;
+  accessoryGesture.pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+  const { coordinateLayer, startTransform } = accessoryGesture;
   const rect = coordinateLayer.getBoundingClientRect();
 
   if (!rect.width || !rect.height) return;
 
-  const x = clampAccessoryCoordinate(
-    ((event.clientX - rect.left - offsetX) / rect.width) * 100,
-    ACCESSORY_LAYOUT_CONFIG.minX,
-    ACCESSORY_LAYOUT_CONFIG.maxX
-  );
-  const y = clampAccessoryCoordinate(
-    ((event.clientY - rect.top - offsetY) / rect.height) * 100,
-    ACCESSORY_LAYOUT_CONFIG.minY,
-    ACCESSORY_LAYOUT_CONFIG.maxY
-  );
+  const pointers = [...accessoryGesture.pointers.values()];
+  let nextTransform = { ...accessoryGesture.currentTransform };
 
-  accessoryDrag.position = { x, y };
-  target.style.setProperty("--accessory-left", `${x}%`);
-  target.style.setProperty("--accessory-top", `${y}%`);
+  if (accessoryGesture.mode === "transform" && pointers.length >= 2) {
+    const center = getPointerCenter(pointers[0], pointers[1]);
+    const distance = getPointerDistance(pointers[0], pointers[1]);
+    const angle = getPointerAngle(pointers[0], pointers[1]);
+    const rotationDelta = normalizeAngleDelta(angle - accessoryGesture.startAngle);
+
+    nextTransform = {
+      x: clampAccessoryCoordinate(startTransform.x + ((center.x - accessoryGesture.startCenter.x) / rect.width) * 100, ACCESSORY_LAYOUT_CONFIG.minX, ACCESSORY_LAYOUT_CONFIG.maxX),
+      y: clampAccessoryCoordinate(startTransform.y + ((center.y - accessoryGesture.startCenter.y) / rect.height) * 100, ACCESSORY_LAYOUT_CONFIG.minY, ACCESSORY_LAYOUT_CONFIG.maxY),
+      rotation: snapAccessoryRotation(startTransform.rotation + rotationDelta),
+      scale: clampAccessoryCoordinate(startTransform.scale * (distance / accessoryGesture.startDistance), ACCESSORY_LAYOUT_CONFIG.minScale, ACCESSORY_LAYOUT_CONFIG.maxScale)
+    };
+  } else if (pointers.length === 1) {
+    nextTransform = {
+      ...startTransform,
+      x: clampAccessoryCoordinate(startTransform.x + ((pointers[0].x - accessoryGesture.startPointer.x) / rect.width) * 100, ACCESSORY_LAYOUT_CONFIG.minX, ACCESSORY_LAYOUT_CONFIG.maxX),
+      y: clampAccessoryCoordinate(startTransform.y + ((pointers[0].y - accessoryGesture.startPointer.y) / rect.height) * 100, ACCESSORY_LAYOUT_CONFIG.minY, ACCESSORY_LAYOUT_CONFIG.maxY)
+    };
+  }
+
+  accessoryGesture.currentTransform = nextTransform;
+  if (!accessoryGesture.frameId) {
+    accessoryGesture.frameId = window.requestAnimationFrame(() => {
+      if (!accessoryGesture) return;
+      applyAccessoryTransformToDom(accessoryGesture.target, accessoryGesture.currentTransform);
+      accessoryGesture.frameId = null;
+    });
+  }
+
   event.preventDefault();
 }
 
 function handleAccessoryPointerUp(event) {
-  if (!accessoryDrag || accessoryDrag.pointerId !== event.pointerId) return;
+  if (!accessoryGesture?.pointers.has(event.pointerId)) return;
 
-  const drag = accessoryDrag;
-  accessoryDrag = null;
+  const gesture = accessoryGesture;
+  if (event.type !== "pointercancel") {
+    gesture.pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    handleAccessoryPointerMove(event);
+  }
+  gesture.pointers.delete(event.pointerId);
 
-  setAccessoryPosition(save, drag.accessoryId, drag.position);
-  persist();
-  drag.target.classList.remove("is-dragging");
-  drag.target.setAttribute("aria-grabbed", "false");
-  if (drag.target.hasPointerCapture?.(event.pointerId)) {
-    drag.target.releasePointerCapture(event.pointerId);
+  if (gesture.target.hasPointerCapture?.(event.pointerId)) {
+    try {
+      gesture.target.releasePointerCapture(event.pointerId);
+    } catch (error) {
+      console.debug("Pointer capture was already released.", error);
+    }
   }
 
-  renderApp();
-  showToast("配件位置已保存。", "success");
+  const remainingPointers = [...gesture.pointers.values()];
+  if (remainingPointers.length === 1) {
+    gesture.mode = "drag";
+    gesture.startTransform = { ...gesture.currentTransform };
+    gesture.startPointer = { ...remainingPointers[0] };
+    gesture.target.classList.remove("is-transforming");
+  } else if (!remainingPointers.length) {
+    if (gesture.frameId) window.cancelAnimationFrame(gesture.frameId);
+    applyAccessoryTransformToDom(gesture.target, gesture.currentTransform);
+    setAccessoryPosition(save, gesture.accessoryId, gesture.currentTransform);
+    persist();
+    gesture.target.classList.remove("is-dragging", "is-transforming");
+    gesture.target.setAttribute("aria-grabbed", "false");
+    accessoryGesture = null;
+    renderApp();
+    showToast("配件位置、角度與大小已保存。", "success");
+  }
 }
 
 function handleAccessoryKeydown(event) {
@@ -308,6 +439,20 @@ function handleAccessoryKeydown(event) {
   target.style.setProperty("--accessory-top", `${nextPosition.y}%`);
   persist();
   event.preventDefault();
+}
+
+function adjustSelectedAccessoryTransform(property, delta) {
+  if (!save || !selectedAccessoryId || !["rotation", "scale"].includes(property)) return;
+
+  const transform = getAccessoryPosition(save, selectedAccessoryId);
+  const nextValue = transform[property] + Number(delta || 0);
+  transform[property] = property === "rotation"
+    ? clampAccessoryCoordinate(nextValue, ACCESSORY_LAYOUT_CONFIG.minRotation, ACCESSORY_LAYOUT_CONFIG.maxRotation)
+    : clampAccessoryCoordinate(nextValue, ACCESSORY_LAYOUT_CONFIG.minScale, ACCESSORY_LAYOUT_CONFIG.maxScale);
+
+  setAccessoryPosition(save, selectedAccessoryId, transform);
+  persist();
+  renderApp();
 }
 
 function showLevelUps(levelUps) {
@@ -744,13 +889,25 @@ function handleAction(actionTarget) {
       leaveBattleIfNeeded("home");
       currentView = "home";
       accessoryEditMode = true;
+      selectedAccessoryId = getEquippedAccessories(save)[0] || null;
       renderApp();
       break;
     case "toggle-accessory-editor":
       if (!save || !getEquippedAccessories(save).length) return;
       accessoryEditMode = !accessoryEditMode;
+      selectedAccessoryId = accessoryEditMode ? getEquippedAccessories(save)[0] : null;
       renderApp();
-      showToast(accessoryEditMode ? "拖曳配件即可調整位置。" : "配件位置已保存。", "info");
+      showToast(accessoryEditMode ? "單指移動，雙指縮放與旋轉配件。" : "配件配置已保存。", "info");
+      break;
+    case "adjust-accessory-transform":
+      adjustSelectedAccessoryTransform(actionTarget.dataset.transform, actionTarget.dataset.delta);
+      break;
+    case "reset-selected-accessory":
+      if (!save || !selectedAccessoryId) return;
+      resetAccessoryPosition(save, selectedAccessoryId);
+      persist();
+      renderApp();
+      showToast("目前配件已回到預設位置與大小。", "success");
       break;
     case "reset-accessory-positions":
       if (!save || !getEquippedAccessories(save).length) return;

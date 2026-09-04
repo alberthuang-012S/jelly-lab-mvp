@@ -277,6 +277,28 @@
     justify-content: flex-start;
   }
 
+  .accessory-transform-heading {
+    grid-template-columns: 38px minmax(0, 1fr);
+  }
+
+  .accessory-transform-values {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+
+  .accessory-transform-actions,
+  .accessory-transform-group {
+    width: 100%;
+  }
+
+  .accessory-transform-group .small-action {
+    flex: 1;
+  }
+
+  .accessory-transform-actions > .small-action {
+    width: 100%;
+  }
+
   .level-orb {
     width: 47px;
     height: 47px;

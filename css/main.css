@@ -766,11 +766,25 @@ button:disabled {
   box-shadow: 0 0 0 4px rgba(94, 196, 217, 0.16);
 }
 
+.jelly-accessory.is-draggable.is-selected {
+  min-width: 3.75rem;
+  min-height: 3.75rem;
+  border-color: rgba(47, 163, 190, 0.92);
+  border-style: solid;
+  background: rgba(255, 255, 255, 0.46);
+  box-shadow: 0 0 0 5px rgba(94, 196, 217, 0.15);
+}
+
 .jelly-accessory.is-draggable.is-dragging {
   cursor: grabbing;
   border-style: solid;
   background: rgba(255, 255, 255, 0.72);
   filter: drop-shadow(0 8px 8px rgba(28, 43, 69, 0.2));
+}
+
+.jelly-accessory.is-draggable.is-transforming {
+  border-color: rgba(121, 92, 190, 0.84);
+  box-shadow: 0 0 0 6px rgba(121, 92, 190, 0.13);
 }
 
 .jelly-shine {
@@ -878,6 +892,75 @@ button:disabled {
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 6px;
+}
+
+.accessory-transform-panel {
+  display: grid;
+  flex: 1 0 100%;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(83, 139, 178, 0.16);
+}
+
+.accessory-transform-heading {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+}
+
+.accessory-transform-heading strong {
+  display: block;
+  margin-top: 2px;
+  color: var(--ink);
+  font-size: 0.76rem;
+}
+
+.accessory-transform-icon {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  border-radius: 12px;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.66);
+  font-size: 1.3rem;
+}
+
+.accessory-transform-values {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 5px;
+}
+
+.accessory-transform-values output {
+  padding: 5px 8px;
+  border-radius: 999px;
+  color: rgba(28, 43, 69, 0.72);
+  background: rgba(224, 247, 251, 0.86);
+  font-size: 0.62rem;
+  font-weight: 800;
+}
+
+.accessory-transform-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.accessory-transform-group {
+  display: flex;
+  gap: 5px;
+}
+
+.accessory-transform-actions .small-action {
+  min-height: 34px;
+}
+
+.accessory-transform-hint {
+  color: var(--muted);
+  font-size: 0.59rem;
 }
 
 .jelly-card-footer {

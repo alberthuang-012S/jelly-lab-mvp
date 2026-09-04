@@ -26,16 +26,23 @@ function uniqueKnownIds(values, knownItems) {
   return [...new Set(Array.isArray(values) ? values.filter((id) => knownIds.has(id)) : [])];
 }
 
-function clampAccessoryPosition(value, minimum, maximum, fallback) {
+function clampAccessoryValue(value, minimum, maximum, fallback) {
   const number = Number(value);
   const safeValue = Number.isFinite(number) ? number : fallback;
   return Math.min(maximum, Math.max(minimum, safeValue));
 }
 
+function roundAccessoryValue(value, precision = 2) {
+  const factor = 10 ** precision;
+  return Math.round(value * factor) / factor;
+}
+
 function getDefaultAccessoryPosition(accessory) {
   return {
-    x: clampAccessoryPosition(accessory?.defaultPosition?.x, ACCESSORY_LAYOUT_CONFIG.minX, ACCESSORY_LAYOUT_CONFIG.maxX, ACCESSORY_LAYOUT_CONFIG.defaultPosition.x),
-    y: clampAccessoryPosition(accessory?.defaultPosition?.y, ACCESSORY_LAYOUT_CONFIG.minY, ACCESSORY_LAYOUT_CONFIG.maxY, ACCESSORY_LAYOUT_CONFIG.defaultPosition.y)
+    x: clampAccessoryValue(accessory?.defaultPosition?.x, ACCESSORY_LAYOUT_CONFIG.minX, ACCESSORY_LAYOUT_CONFIG.maxX, ACCESSORY_LAYOUT_CONFIG.defaultPosition.x),
+    y: clampAccessoryValue(accessory?.defaultPosition?.y, ACCESSORY_LAYOUT_CONFIG.minY, ACCESSORY_LAYOUT_CONFIG.maxY, ACCESSORY_LAYOUT_CONFIG.defaultPosition.y),
+    rotation: clampAccessoryValue(accessory?.defaultPosition?.rotation, ACCESSORY_LAYOUT_CONFIG.minRotation, ACCESSORY_LAYOUT_CONFIG.maxRotation, ACCESSORY_LAYOUT_CONFIG.defaultPosition.rotation),
+    scale: clampAccessoryValue(accessory?.defaultPosition?.scale, ACCESSORY_LAYOUT_CONFIG.minScale, ACCESSORY_LAYOUT_CONFIG.maxScale, ACCESSORY_LAYOUT_CONFIG.defaultPosition.scale)
   };
 }
 
@@ -50,8 +57,10 @@ function normalizeAccessoryPositions(sourcePositions) {
     const fallback = getDefaultAccessoryPosition(accessory);
     const source = values[accessory.id];
     return [accessory.id, {
-      x: clampAccessoryPosition(source?.x, ACCESSORY_LAYOUT_CONFIG.minX, ACCESSORY_LAYOUT_CONFIG.maxX, fallback.x),
-      y: clampAccessoryPosition(source?.y, ACCESSORY_LAYOUT_CONFIG.minY, ACCESSORY_LAYOUT_CONFIG.maxY, fallback.y)
+      x: clampAccessoryValue(source?.x, ACCESSORY_LAYOUT_CONFIG.minX, ACCESSORY_LAYOUT_CONFIG.maxX, fallback.x),
+      y: clampAccessoryValue(source?.y, ACCESSORY_LAYOUT_CONFIG.minY, ACCESSORY_LAYOUT_CONFIG.maxY, fallback.y),
+      rotation: clampAccessoryValue(source?.rotation, ACCESSORY_LAYOUT_CONFIG.minRotation, ACCESSORY_LAYOUT_CONFIG.maxRotation, fallback.rotation),
+      scale: clampAccessoryValue(source?.scale, ACCESSORY_LAYOUT_CONFIG.minScale, ACCESSORY_LAYOUT_CONFIG.maxScale, fallback.scale)
     }];
   }));
 }
@@ -506,8 +515,10 @@ export function getAccessoryPosition(save, accessoryId) {
   const savedPosition = save?.jellyfish?.accessoryPositions?.[accessoryId];
 
   return {
-    x: clampAccessoryPosition(savedPosition?.x, ACCESSORY_LAYOUT_CONFIG.minX, ACCESSORY_LAYOUT_CONFIG.maxX, fallback.x),
-    y: clampAccessoryPosition(savedPosition?.y, ACCESSORY_LAYOUT_CONFIG.minY, ACCESSORY_LAYOUT_CONFIG.maxY, fallback.y)
+    x: clampAccessoryValue(savedPosition?.x, ACCESSORY_LAYOUT_CONFIG.minX, ACCESSORY_LAYOUT_CONFIG.maxX, fallback.x),
+    y: clampAccessoryValue(savedPosition?.y, ACCESSORY_LAYOUT_CONFIG.minY, ACCESSORY_LAYOUT_CONFIG.maxY, fallback.y),
+    rotation: clampAccessoryValue(savedPosition?.rotation, ACCESSORY_LAYOUT_CONFIG.minRotation, ACCESSORY_LAYOUT_CONFIG.maxRotation, fallback.rotation),
+    scale: clampAccessoryValue(savedPosition?.scale, ACCESSORY_LAYOUT_CONFIG.minScale, ACCESSORY_LAYOUT_CONFIG.maxScale, fallback.scale)
   };
 }
 
@@ -519,9 +530,20 @@ export function setAccessoryPosition(save, accessoryId, position = {}) {
   save.jellyfish.accessoryPositions = save.jellyfish.accessoryPositions || createDefaultAccessoryPositions();
   const current = getAccessoryPosition(save, accessoryId);
   save.jellyfish.accessoryPositions[accessoryId] = {
-    x: clampAccessoryPosition(position.x, ACCESSORY_LAYOUT_CONFIG.minX, ACCESSORY_LAYOUT_CONFIG.maxX, current.x),
-    y: clampAccessoryPosition(position.y, ACCESSORY_LAYOUT_CONFIG.minY, ACCESSORY_LAYOUT_CONFIG.maxY, current.y)
+    x: roundAccessoryValue(clampAccessoryValue(position.x, ACCESSORY_LAYOUT_CONFIG.minX, ACCESSORY_LAYOUT_CONFIG.maxX, current.x)),
+    y: roundAccessoryValue(clampAccessoryValue(position.y, ACCESSORY_LAYOUT_CONFIG.minY, ACCESSORY_LAYOUT_CONFIG.maxY, current.y)),
+    rotation: roundAccessoryValue(clampAccessoryValue(position.rotation, ACCESSORY_LAYOUT_CONFIG.minRotation, ACCESSORY_LAYOUT_CONFIG.maxRotation, current.rotation)),
+    scale: roundAccessoryValue(clampAccessoryValue(position.scale, ACCESSORY_LAYOUT_CONFIG.minScale, ACCESSORY_LAYOUT_CONFIG.maxScale, current.scale))
   };
+  return true;
+}
+
+export function resetAccessoryPosition(save, accessoryId) {
+  const accessory = ACCESSORIES.find((item) => item.id === accessoryId);
+  if (!accessory) return false;
+
+  save.jellyfish.accessoryPositions = save.jellyfish.accessoryPositions || createDefaultAccessoryPositions();
+  save.jellyfish.accessoryPositions[accessoryId] = getDefaultAccessoryPosition(accessory);
   return true;
 }
 

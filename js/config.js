@@ -1,5 +1,5 @@
 export const GAME_CONFIG = {
-  version: 5,
+  version: 6,
   saveKey: "jellyLabSave",
   startingPoints: 50000,
   maxLevel: 10,
@@ -227,6 +227,14 @@ export const ACCESSORY_LAYOUT_CONFIG = {
   maxX: 96,
   minY: 4,
   maxY: 96,
+  minScale: 0.6,
+  maxScale: 1.6,
+  scaleStep: 0.05,
+  rotationStep: 5,
+  minRotation: -180,
+  maxRotation: 180,
+  snapAngles: [-180, -90, 0, 90, 180],
+  snapThreshold: 3,
   defaultPosition: { x: 50, y: 50, rotation: 0, scale: 1 }
 };
 

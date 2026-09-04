@@ -1,5 +1,5 @@
-import { GAME_CONFIG } from "./config.js?v=2.15.1";
-import { createDefaultSave, normalizeSave, applyDailyReset } from "./state.js?v=2.15.1";
+import { GAME_CONFIG } from "./config.js?v=2.15.2";
+import { createDefaultSave, normalizeSave, applyDailyReset } from "./state.js?v=2.15.2";
 
 export function loadSave() {
   try {

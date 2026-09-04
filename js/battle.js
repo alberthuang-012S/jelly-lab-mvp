@@ -3,11 +3,11 @@ import {
   BATTLE_SHOP_ITEMS,
   QUANTITY_CONFIG,
   REWARDS_CONFIG
-} from "./config.js?v=2.15.1";
+} from "./config.js?v=2.15.2";
 import {
   consumeBattleItem,
   getBattleItemQuantity
-} from "./state.js?v=2.15.1";
+} from "./state.js?v=2.15.2";
 
 const WEAPON_TYPES = new Set(["weapon"]);
 const BATTLE_ITEM_TYPES = new Set(["weapon", "recovery", "ointment"]);

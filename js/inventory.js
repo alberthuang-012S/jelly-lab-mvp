@@ -1,5 +1,5 @@
-import { ACCESSORIES, BATTLE_SHOP_ITEMS, FOODS, SCENES, SKINS } from "./config.js?v=2.15.1";
-import { consumeFood, getBattleItemQuantity, getFoodQuantity } from "./state.js?v=2.15.1";
+import { ACCESSORIES, BATTLE_SHOP_ITEMS, FOODS, SCENES, SKINS } from "./config.js?v=2.15.2";
+import { consumeFood, getBattleItemQuantity, getFoodQuantity } from "./state.js?v=2.15.2";
 
 export function getInventoryItems(save, category) {
   if (category === "food") {

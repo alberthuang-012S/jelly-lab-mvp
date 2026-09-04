@@ -74,16 +74,8 @@
   background: linear-gradient(145deg, rgba(255, 255, 255, 0.22), transparent 32%), var(--food-accent);
 }
 
-.food-visual-pineapple-green::after {
-  background: repeating-linear-gradient(135deg, rgba(255, 247, 217, 0.42) 0 4px, transparent 4px 8px), var(--food-secondary);
-}
-
 .food-visual-pineapple-yellow::before {
   background: linear-gradient(145deg, rgba(255, 255, 255, 0.48), transparent 34%), var(--food-accent);
-}
-
-.food-visual-pineapple-yellow::after {
-  background: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.55) 0 4px, transparent 4px 8px), var(--food-secondary);
 }
 
 .food-visual-chocolate-gold::before {
@@ -94,11 +86,10 @@
   box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.58), inset 0 -8px 10px rgba(111, 67, 23, 0.18), 0 6px 10px rgba(68, 90, 143, 0.12);
 }
 
+.food-visual-pineapple-green::after,
+.food-visual-pineapple-yellow::after,
 .food-visual-chocolate-gold::after {
-  top: 11px;
-  width: 66px;
-  height: 8px;
-  background: rgba(255, 246, 199, 0.55);
+  display: none;
 }
 
 .food-visual-chocolate-clear::before {

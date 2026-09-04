@@ -1,5 +1,5 @@
-import { ACCESSORIES, JELLYFISH_COLORS, SCENES, SKINS } from "./config.js?v=2.13.0";
-import { getCurrentStage } from "./state.js?v=2.13.0";
+import { ACCESSORIES, ACCESSORY_LAYOUT_CONFIG, JELLYFISH_COLORS, SCENES, SKINS } from "./config.js?v=2.14.4";
+import { getCurrentStage } from "./state.js?v=2.14.4";
 
 export function getSkin(skinId) {
   return SKINS.find((skin) => skin.id === skinId) || SKINS[0];
@@ -44,6 +44,8 @@ function renderJellyfishMarkup({ skin, accessories = [], stage, baseColorId, acc
   const accessoryNames = accessories.map((accessory) => accessory.name).join("、");
   const accessibilityName = `${hasBaseColor ? `${baseColor.name} ` : ""}${skin.name}，${stage.name}${accessoryNames ? `，配件：${accessoryNames}` : ""}`;
   const spriteStyle = `--skin-accent:${skin.accent};--jelly-base-color:${baseColor.color};--jelly-hue-rotate:${baseColor.hueRotate};--jelly-saturation:${baseColor.saturation}`;
+  const selectedAccessory = accessories.find((accessory) => accessory.id === selectedAccessoryId);
+  const selectedPosition = selectedAccessory ? accessoryPositions[selectedAccessory.id] || selectedAccessory.defaultPosition : null;
 
   return `
     <div class="jelly-character skin-${skin.id} stage-${stage.stage}${hasBaseColor ? " has-base-color" : ""}${accessoryEditMode ? " accessory-edit-mode" : ""}${actionClass ? ` ${actionClass}` : ""}" style="${spriteStyle}" role="${accessoryEditMode ? "group" : "img"}" aria-label="${accessibilityName}">
@@ -59,8 +61,20 @@ function renderJellyfishMarkup({ skin, accessories = [], stage, baseColorId, acc
           const scale = Number.isFinite(Number(position.scale)) ? Number(position.scale) : fallbackScale;
           const isSelected = accessoryEditMode && selectedAccessoryId === accessory.id;
           const dragAttributes = accessoryEditMode ? `role="button" tabindex="0" aria-grabbed="false" aria-pressed="${isSelected}"` : "";
-          return `<span class="jelly-accessory${accessoryEditMode ? " is-draggable" : ""}${isSelected ? " is-selected" : ""}" data-accessory-id="${accessory.id}" data-accessory-slot="${accessory.slot || ""}" style="--accessory-left:${position.x}%;--accessory-top:${position.y}%;--accessory-rotation:${rotation}deg;--accessory-scale:${scale}" aria-label="${accessory.name}" ${dragAttributes}>${accessory.icon}</span>`;
+          return `<span class="jelly-accessory${accessoryEditMode ? " is-draggable" : ""}${isSelected ? " is-selected" : ""}" data-accessory-id="${accessory.id}" data-accessory-slot="${accessory.slot || ""}" style="--accessory-left:${position.x}%;--accessory-top:${position.y}%;--accessory-rotation:${rotation}deg;--accessory-scale:${scale}" aria-label="${accessory.name}" ${dragAttributes}><span class="jelly-accessory-visual" aria-hidden="true">${accessory.icon}</span></span>`;
         }).join("")}
+        ${accessoryEditMode && selectedAccessory && selectedPosition ? `
+          <div class="accessory-floating-toolbar" data-accessory-toolbar data-accessory-id="${selectedAccessory.id}" role="toolbar" aria-label="調整${selectedAccessory.name}">
+            <output class="accessory-toolbar-readout" data-accessory-transform-readout aria-live="polite">${Math.round(Number(selectedPosition.rotation ?? selectedAccessory.defaultPosition?.rotation ?? 0))}° · ${Number(selectedPosition.scale ?? selectedAccessory.defaultPosition?.scale ?? 1).toFixed(2)}×</output>
+            <div class="accessory-toolbar-actions">
+              <button type="button" data-action="adjust-accessory-transform" data-transform="rotation" data-delta="-${ACCESSORY_LAYOUT_CONFIG.rotationStep}" aria-label="向左旋轉 ${ACCESSORY_LAYOUT_CONFIG.rotationStep} 度">↶</button>
+              <button type="button" data-action="adjust-accessory-transform" data-transform="rotation" data-delta="${ACCESSORY_LAYOUT_CONFIG.rotationStep}" aria-label="向右旋轉 ${ACCESSORY_LAYOUT_CONFIG.rotationStep} 度">↷</button>
+              <button type="button" data-action="adjust-accessory-transform" data-transform="scale" data-delta="-${ACCESSORY_LAYOUT_CONFIG.scaleStep}" aria-label="縮小配件">−</button>
+              <button type="button" data-action="adjust-accessory-transform" data-transform="scale" data-delta="${ACCESSORY_LAYOUT_CONFIG.scaleStep}" aria-label="放大配件">＋</button>
+              <button type="button" data-action="reset-selected-accessory" aria-label="重設目前配件">↺</button>
+            </div>
+          </div>
+        ` : ""}
       </div>
       <span class="jelly-shine" aria-hidden="true"></span>
     </div>

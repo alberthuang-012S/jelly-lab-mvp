@@ -10,11 +10,11 @@ import {
   QUANTITY_CONFIG,
   SCENES,
   SKINS
-} from "./config.js?v=2.16.0";
+} from "./config.js?v=2.16.1";
 import { trackEvent } from "./analytics.js";
-import { feedFood, getInventoryItems } from "./inventory.js?v=2.16.0";
-import { getScene } from "./jellyfish.js?v=2.16.0";
-import { purchaseItem, getShopItems } from "./shop.js?v=2.16.0";
+import { feedFood, getInventoryItems } from "./inventory.js?v=2.16.1";
+import { getScene } from "./jellyfish.js?v=2.16.1";
+import { purchaseItem, getShopItems } from "./shop.js?v=2.16.1";
 import {
   addBattleItem,
   addExp,
@@ -36,7 +36,7 @@ import {
   petJellyfish,
   setAccessoryPosition,
   unequipAccessory
-} from "./state.js?v=2.16.0";
+} from "./state.js?v=2.16.1";
 import {
   beginPlayerAction,
   claimBossReward,
@@ -50,8 +50,8 @@ import {
   recordBossVictory,
   resetBossReward,
   resolveBossTurn
-} from "./battle.js?v=2.16.0";
-import { clearSave, createAndPersistSave, loadSave, persistSave } from "./storage.js?v=2.16.0";
+} from "./battle.js?v=2.16.1";
+import { clearSave, createAndPersistSave, loadSave, persistSave } from "./storage.js?v=2.16.1";
 import {
   closeModal,
   escapeHtml,
@@ -72,8 +72,8 @@ import {
   showPurchaseSuccess,
   showToast,
   updateHeader
-} from "./ui.js?v=2.16.0";
-import { renderFoodVisual } from "./components.js?v=2.16.0";
+} from "./ui.js?v=2.16.1";
+import { renderFoodVisual } from "./components.js?v=2.16.1";
 
 let save = loadSave();
 let currentView = "home";
@@ -233,6 +233,68 @@ function getQuickFeedFood() {
   return ownedFoods.find((food) => food.id === quickFeedFoodId) || ownedFoods[0] || null;
 }
 
+function updateQuickFeedPanelDom() {
+  if (!save || !quickFeedOpen) return;
+
+  const panel = getElement("quick-feed-root")?.querySelector(".quick-feed-layer");
+  if (!panel) {
+    renderApp();
+    return;
+  }
+
+  const ownedFoods = FOODS.filter((food) => getFoodQuantity(save, food.id) > 0);
+  const selectedFood = ownedFoods.find((food) => food.id === quickFeedFoodId) || ownedFoods[0] || null;
+  if (!selectedFood) {
+    quickFeedFoodId = null;
+    quickFeedQuantity = 1;
+    renderApp();
+    return;
+  }
+
+  const selectedStock = getFoodQuantity(save, selectedFood.id);
+  const number = Number(quickFeedQuantity);
+  quickFeedFoodId = selectedFood.id;
+  quickFeedQuantity = Number.isFinite(number) ? Math.min(selectedStock, Math.max(1, Math.floor(number))) : 1;
+
+  panel.querySelectorAll("[data-action=\"quick-feed-select\"]").forEach((card) => {
+    const isSelected = card.dataset.foodId === selectedFood.id;
+    card.classList.toggle("is-selected", isSelected);
+    card.setAttribute("aria-pressed", String(isSelected));
+  });
+
+  panel.querySelectorAll("[data-quick-feed-stock]").forEach((stockElement) => {
+    const food = FOODS.find((candidate) => candidate.id === stockElement.dataset.quickFeedStock);
+    if (!food) return;
+    stockElement.textContent = `EXP +${formatNumber(food.exp)} · 庫存 ×${formatNumber(getFoodQuantity(save, food.id))}`;
+  });
+
+  const selectedName = panel.querySelector("#quick-feed-selected-name");
+  const selectedMeta = panel.querySelector("#quick-feed-selected-meta");
+  const selectedTotalExp = panel.querySelector("#quick-feed-selected-total-exp");
+  if (selectedName) selectedName.textContent = selectedFood.shortName;
+  if (selectedMeta) selectedMeta.textContent = `單份 EXP +${formatNumber(selectedFood.exp)} · 剩餘 ×${formatNumber(selectedStock)}`;
+  if (selectedTotalExp) selectedTotalExp.textContent = `本次獲得 EXP +${formatNumber(selectedFood.exp * quickFeedQuantity)}`;
+
+  const quantityInput = panel.querySelector("#quick-feed-quantity-input");
+  if (quantityInput) {
+    quantityInput.value = String(quickFeedQuantity);
+    quantityInput.max = String(selectedStock);
+    quantityInput.dataset.foodId = selectedFood.id;
+    quantityInput.setAttribute("aria-label", `餵食數量，${selectedFood.shortName}`);
+  }
+
+  panel.querySelectorAll("[data-action=\"quick-feed-quantity-decrease\"], [data-action=\"quick-feed-quantity-increase\"]").forEach((button) => {
+    button.dataset.foodId = selectedFood.id;
+  });
+
+  const submitButton = panel.querySelector("#quick-feed-submit");
+  if (submitButton) {
+    submitButton.dataset.foodId = selectedFood.id;
+    submitButton.disabled = quickFeedActionLocked;
+    submitButton.textContent = `🍰 餵食 ${selectedFood.shortName} ×${quickFeedQuantity}`;
+  }
+}
+
 function closeQuickFeedPanel() {
   quickFeedOpen = false;
   quickFeedFoodId = null;
@@ -264,7 +326,7 @@ function updateQuickFeedQuantity(foodId, nextQuantity) {
   const stock = getFoodQuantity(save, food.id);
   const number = Number(nextQuantity);
   quickFeedQuantity = Number.isFinite(number) ? Math.min(stock, Math.max(1, Math.floor(number))) : 1;
-  renderApp();
+  updateQuickFeedPanelDom();
 }
 
 function handleQuickFeedSubmit() {
@@ -1044,7 +1106,7 @@ function handleAction(actionTarget) {
       if (!save || quickFeedActionLocked) return;
       quickFeedFoodId = actionTarget.dataset.foodId || null;
       quickFeedQuantity = 1;
-      renderApp();
+      updateQuickFeedPanelDom();
       break;
     case "quick-feed-quantity-decrease":
       if (!quickFeedActionLocked) updateQuickFeedQuantity(actionTarget.dataset.foodId, quickFeedQuantity - 1);

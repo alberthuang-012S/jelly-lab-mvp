@@ -38,7 +38,7 @@ function getAccessoryList(save, options) {
   return equippedAccessoryIds.map((accessoryId) => getAccessory(accessoryId)).filter(Boolean);
 }
 
-function renderJellyfishMarkup({ skin, accessories = [], stage, baseColorId, actionClass = "" }) {
+function renderJellyfishMarkup({ skin, accessories = [], stage, baseColorId, accessoryPositions = {}, accessoryEditMode = false, actionClass = "" }) {
   const baseColor = getBaseColor(baseColorId);
   const hasBaseColor = skin.id === "normal";
   const accessoryNames = accessories.map((accessory) => accessory.name).join("、");
@@ -46,11 +46,17 @@ function renderJellyfishMarkup({ skin, accessories = [], stage, baseColorId, act
   const spriteStyle = `--skin-accent:${skin.accent};--jelly-base-color:${baseColor.color};--jelly-hue-rotate:${baseColor.hueRotate};--jelly-saturation:${baseColor.saturation}`;
 
   return `
-    <div class="jelly-character skin-${skin.id} stage-${stage.stage}${hasBaseColor ? " has-base-color" : ""}${actionClass ? ` ${actionClass}` : ""}" style="${spriteStyle}" role="img" aria-label="${accessibilityName}">
+    <div class="jelly-character skin-${skin.id} stage-${stage.stage}${hasBaseColor ? " has-base-color" : ""}${accessoryEditMode ? " accessory-edit-mode" : ""}${actionClass ? ` ${actionClass}` : ""}" style="${spriteStyle}" role="img" aria-label="${accessibilityName}">
       <div class="jelly-art" aria-hidden="true">
         <img class="jelly-image" src="${skin.asset}" alt="" draggable="false" />
       </div>
-      ${accessories.map((accessory) => `<span class="jelly-accessory" data-accessory-slot="${accessory.slot}" aria-label="${accessory.name}">${accessory.icon}</span>`).join("")}
+      ${accessories.map((accessory) => {
+        const position = accessoryPositions[accessory.id] || accessory.defaultPosition || { x: 50, y: 50 };
+        const rotation = Number.isFinite(Number(accessory.defaultPosition?.rotation)) ? Number(accessory.defaultPosition.rotation) : 0;
+        const scale = Number.isFinite(Number(accessory.defaultPosition?.scale)) ? Number(accessory.defaultPosition.scale) : 1;
+        const dragAttributes = accessoryEditMode ? 'role="button" tabindex="0" aria-grabbed="false"' : "";
+        return `<span class="jelly-accessory${accessoryEditMode ? " is-draggable" : ""}" data-accessory-id="${accessory.id}" data-accessory-slot="${accessory.slot || ""}" style="--accessory-left:${position.x}%;--accessory-top:${position.y}%;--accessory-rotation:${rotation}deg;--accessory-scale:${scale}" aria-label="${accessory.name}" ${dragAttributes}>${accessory.icon}</span>`;
+      }).join("")}
       <span class="jelly-shine" aria-hidden="true"></span>
     </div>
   `;
@@ -61,12 +67,15 @@ export function renderJellyfish(save, options = {}) {
   const accessories = getAccessoryList(save, options);
   const stage = options.stage || getCurrentStage(save);
   const baseColorId = options.baseColor || save.jellyfish.baseColor;
+  const accessoryPositions = options.accessoryPositions || save?.jellyfish?.accessoryPositions || {};
 
   return renderJellyfishMarkup({
     skin,
     accessories,
     stage,
     baseColorId,
+    accessoryPositions,
+    accessoryEditMode: options.accessoryEditMode === true,
     actionClass: options.actionClass
   });
 }

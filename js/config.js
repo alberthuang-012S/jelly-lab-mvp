@@ -1,5 +1,5 @@
 export const GAME_CONFIG = {
-  version: 4,
+  version: 5,
   saveKey: "jellyLabSave",
   startingPoints: 50000,
   maxLevel: 10,
@@ -222,6 +222,14 @@ export const ACCESSORY_SLOTS = {
   right: { label: "右側裝飾", order: 4 }
 };
 
+export const ACCESSORY_LAYOUT_CONFIG = {
+  minX: 4,
+  maxX: 96,
+  minY: 4,
+  maxY: 96,
+  defaultPosition: { x: 50, y: 50, rotation: 0, scale: 1 }
+};
+
 export const ACCESSORIES = [
   {
     id: "accessory_crown",
@@ -231,6 +239,7 @@ export const ACCESSORIES = [
     icon: "👑",
     price: 180,
     requiredLevel: 3,
+    defaultPosition: { x: 40, y: 7, rotation: -6, scale: 1 },
     description: "給今天的主角戴上一頂皇冠。"
   },
   {
@@ -241,6 +250,7 @@ export const ACCESSORIES = [
     icon: "🎀",
     price: 160,
     requiredLevel: 2,
+    defaultPosition: { x: 14, y: 36, rotation: -14, scale: 1 },
     description: "輕飄飄的蝴蝶結，讓漂浮更有風格。"
   },
   {
@@ -251,6 +261,7 @@ export const ACCESSORIES = [
     icon: "🕶️",
     price: 220,
     requiredLevel: 4,
+    defaultPosition: { x: 50, y: 39, rotation: -6, scale: 0.86 },
     description: "Jelly Lab 研究員的專屬配件。"
   },
   {
@@ -261,6 +272,7 @@ export const ACCESSORIES = [
     icon: "⭐",
     price: 260,
     requiredLevel: 5,
+    defaultPosition: { x: 86, y: 19, rotation: 8, scale: 0.72 },
     description: "把一顆小星星帶到海底。"
   },
   {
@@ -271,6 +283,7 @@ export const ACCESSORIES = [
     icon: "🧢",
     price: 300,
     requiredLevel: 6,
+    defaultPosition: { x: 62, y: 8, rotation: 5, scale: 0.92 },
     description: "準備好帶你探索星海。"
   }
 ];
@@ -473,7 +486,7 @@ export const BATTLE_SHOP_ITEMS = [
     price: 300,
     cures: "itchy",
     consumable: true,
-    description: "PPA 外用藥膏，舒緩搔癢狀態，不會恢復 HP。"
+    description: "PPA+1 乳霜，舒緩搔癢狀態，不會恢復 HP。"
   }
 ];
 
@@ -542,7 +555,7 @@ export const REWARDS_CONFIG = {
 export const BATTLE_SHOP_GROUPS = [
   { id: "weapon", label: "膠囊武器", hint: "攻擊老化怪獸" },
   { id: "recovery", label: "回復飲料", hint: "回復 HP、解除視野模糊" },
-  { id: "ointment", label: "外用藥膏", hint: "解除癢狀態" }
+  { id: "ointment", label: "外用乳霜", hint: "解除癢狀態" }
 ];
 
 export function getAllShopItems() {

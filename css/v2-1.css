@@ -1,4 +1,4 @@
-/* Jelly Lab V2.1/V2.2/V2.6 · visual system, quantity controls, onboarding color choice, and alignment */
+/* Jelly Lab V2.1/V2.2/V2.6/V2.7 · visual system, quantity controls, onboarding color choice, and alignment */
 
 /* Shared battle item visuals */
 
@@ -119,10 +119,10 @@
 }
 
 .bottle-visual {
-  width: 48px;
-  height: 74px;
+  width: 42px;
+  height: 76px;
   border: 1px solid rgba(128, 129, 135, 0.28);
-  border-radius: 12px 12px 15px 15px;
+  border-radius: 10px 10px 13px 13px;
   background: var(--bottle-body-color);
   box-shadow: inset 4px 0 7px rgba(255, 255, 255, 0.82), inset -4px -7px 9px rgba(117, 122, 131, 0.11), 0 9px 13px rgba(56, 83, 105, 0.14);
   transform: scale(var(--visual-scale, 1));
@@ -131,20 +131,20 @@
 .bottle-body {
   position: absolute;
   z-index: 1;
-  top: 9px;
-  right: 0;
+  top: 14px;
+  right: 2px;
   bottom: 0;
-  left: 0;
+  left: 2px;
   overflow: hidden;
-  border-radius: 12px 12px 15px 15px;
+  border-radius: 9px 9px 11px 11px;
   background: linear-gradient(90deg, rgba(255, 255, 255, 0.72), transparent 22% 78%, rgba(125, 129, 137, 0.08)), var(--bottle-body-color);
 }
 
 .bottle-body::before {
   position: absolute;
-  top: -2px;
-  right: 7px;
-  left: 7px;
+  top: -3px;
+  right: 6px;
+  left: 6px;
   height: 7px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.72);
@@ -154,10 +154,10 @@
 .bottle-pump {
   position: absolute;
   z-index: 3;
-  top: -8px;
-  left: 8px;
-  width: 31px;
-  height: 12px;
+  top: -10px;
+  left: 6px;
+  width: 28px;
+  height: 13px;
   border: 1px solid rgba(126, 128, 135, 0.28);
   border-radius: 7px 7px 3px 3px;
   background: linear-gradient(180deg, #fff, var(--bottle-pump-color));
@@ -166,10 +166,10 @@
 
 .bottle-nozzle {
   position: absolute;
-  top: 2px;
-  right: -8px;
-  width: 11px;
-  height: 5px;
+  top: 3px;
+  right: -10px;
+  width: 13px;
+  height: 6px;
   border: 1px solid rgba(126, 128, 135, 0.25);
   border-left: 0;
   border-radius: 0 5px 5px 0;
@@ -179,10 +179,10 @@
 .bottle-neck {
   position: absolute;
   z-index: 2;
-  top: 1px;
-  right: 13px;
-  left: 13px;
-  height: 14px;
+  top: 0;
+  right: 11px;
+  left: 11px;
+  height: 18px;
   border: 1px solid rgba(126, 128, 135, 0.2);
   border-radius: 5px 5px 3px 3px;
   background: linear-gradient(90deg, #fff, var(--bottle-pump-color), #fff);
@@ -190,22 +190,21 @@
 
 .bottle-highlight {
   position: absolute;
-  top: 13px;
-  left: 7px;
+  top: 16px;
+  left: 6px;
   width: 4px;
-  height: 38px;
+  height: 34px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.62);
 }
 
 .bottle-label {
   position: absolute;
-  top: 27px;
-  right: 3px;
-  left: 3px;
+  top: 42px;
+  right: 1px;
+  left: 1px;
   display: grid;
   justify-items: center;
-  gap: 2px;
   color: var(--bottle-label-color);
   font-family: ui-sans-serif, system-ui, sans-serif;
   line-height: 1;
@@ -213,23 +212,9 @@
 }
 
 .bottle-label strong {
-  font-size: 0.66rem;
+  font-size: 0.6rem;
   font-weight: 900;
   letter-spacing: -0.03em;
-}
-
-.bottle-label small {
-  color: var(--bottle-label-color);
-  font-size: 0.39rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  white-space: nowrap;
-}
-
-.bottle-label i {
-  color: var(--bottle-label-accent);
-  font-size: 0.54rem;
-  font-style: normal;
 }
 
 .tin-visual {

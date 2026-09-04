@@ -1,5 +1,6 @@
 import {
   ACCESSORIES,
+  ACCESSORY_LAYOUT_CONFIG,
   BATTLE_SHOP_ITEMS,
   EVOLUTION_STAGES,
   FOODS,
@@ -25,23 +26,41 @@ function uniqueKnownIds(values, knownItems) {
   return [...new Set(Array.isArray(values) ? values.filter((id) => knownIds.has(id)) : [])];
 }
 
+function clampAccessoryPosition(value, minimum, maximum, fallback) {
+  const number = Number(value);
+  const safeValue = Number.isFinite(number) ? number : fallback;
+  return Math.min(maximum, Math.max(minimum, safeValue));
+}
+
+function getDefaultAccessoryPosition(accessory) {
+  return {
+    x: clampAccessoryPosition(accessory?.defaultPosition?.x, ACCESSORY_LAYOUT_CONFIG.minX, ACCESSORY_LAYOUT_CONFIG.maxX, ACCESSORY_LAYOUT_CONFIG.defaultPosition.x),
+    y: clampAccessoryPosition(accessory?.defaultPosition?.y, ACCESSORY_LAYOUT_CONFIG.minY, ACCESSORY_LAYOUT_CONFIG.maxY, ACCESSORY_LAYOUT_CONFIG.defaultPosition.y)
+  };
+}
+
+function createDefaultAccessoryPositions() {
+  return Object.fromEntries(ACCESSORIES.map((accessory) => [accessory.id, getDefaultAccessoryPosition(accessory)]));
+}
+
+function normalizeAccessoryPositions(sourcePositions) {
+  const values = sourcePositions && typeof sourcePositions === "object" && !Array.isArray(sourcePositions) ? sourcePositions : {};
+
+  return Object.fromEntries(ACCESSORIES.map((accessory) => {
+    const fallback = getDefaultAccessoryPosition(accessory);
+    const source = values[accessory.id];
+    return [accessory.id, {
+      x: clampAccessoryPosition(source?.x, ACCESSORY_LAYOUT_CONFIG.minX, ACCESSORY_LAYOUT_CONFIG.maxX, fallback.x),
+      y: clampAccessoryPosition(source?.y, ACCESSORY_LAYOUT_CONFIG.minY, ACCESSORY_LAYOUT_CONFIG.maxY, fallback.y)
+    }];
+  }));
+}
+
 function normalizeEquippedAccessories(values, ownedAccessoryIds) {
   const ownedIds = new Set(ownedAccessoryIds);
-  const usedSlots = new Set();
 
   return uniqueKnownIds(values, ACCESSORIES).filter((accessoryId) => {
-    if (!ownedIds.has(accessoryId)) {
-      return false;
-    }
-
-    const slot = ACCESSORIES.find((accessory) => accessory.id === accessoryId)?.slot;
-
-    if (!slot || usedSlots.has(slot)) {
-      return false;
-    }
-
-    usedSlots.add(slot);
-    return true;
+    return ownedIds.has(accessoryId);
   });
 }
 
@@ -128,6 +147,7 @@ export function createDefaultSave(name, baseColor = GAME_CONFIG.initialBaseColor
       intimacy: 0,
       equippedSkin: GAME_CONFIG.initialSkin,
       equippedAccessories: [],
+      accessoryPositions: createDefaultAccessoryPositions(),
       equippedScene: GAME_CONFIG.initialScene
     },
     daily: {
@@ -213,6 +233,7 @@ export function normalizeSave(raw) {
     ? sourceJellyfish.equippedAccessories
     : sourceJellyfish.equippedAccessory ? [sourceJellyfish.equippedAccessory] : [];
   const equippedAccessories = normalizeEquippedAccessories(sourceEquippedAccessories, accessories);
+  const accessoryPositions = normalizeAccessoryPositions(sourceJellyfish.accessoryPositions);
   const equippedScene = scenes.includes(sourceJellyfish.equippedScene) ? sourceJellyfish.equippedScene : GAME_CONFIG.initialScene;
 
   return {
@@ -230,6 +251,7 @@ export function normalizeSave(raw) {
       intimacy: nonNegativeInteger(sourceJellyfish.intimacy),
       equippedSkin,
       equippedAccessories,
+      accessoryPositions,
       equippedScene
     },
     daily: {
@@ -478,6 +500,36 @@ export function getEquippedAccessories(save) {
   return save?.jellyfish?.equippedAccessory ? [save.jellyfish.equippedAccessory] : [];
 }
 
+export function getAccessoryPosition(save, accessoryId) {
+  const accessory = ACCESSORIES.find((item) => item.id === accessoryId);
+  const fallback = getDefaultAccessoryPosition(accessory);
+  const savedPosition = save?.jellyfish?.accessoryPositions?.[accessoryId];
+
+  return {
+    x: clampAccessoryPosition(savedPosition?.x, ACCESSORY_LAYOUT_CONFIG.minX, ACCESSORY_LAYOUT_CONFIG.maxX, fallback.x),
+    y: clampAccessoryPosition(savedPosition?.y, ACCESSORY_LAYOUT_CONFIG.minY, ACCESSORY_LAYOUT_CONFIG.maxY, fallback.y)
+  };
+}
+
+export function setAccessoryPosition(save, accessoryId, position = {}) {
+  if (!ACCESSORIES.some((accessory) => accessory.id === accessoryId)) {
+    return false;
+  }
+
+  save.jellyfish.accessoryPositions = save.jellyfish.accessoryPositions || createDefaultAccessoryPositions();
+  const current = getAccessoryPosition(save, accessoryId);
+  save.jellyfish.accessoryPositions[accessoryId] = {
+    x: clampAccessoryPosition(position.x, ACCESSORY_LAYOUT_CONFIG.minX, ACCESSORY_LAYOUT_CONFIG.maxX, current.x),
+    y: clampAccessoryPosition(position.y, ACCESSORY_LAYOUT_CONFIG.minY, ACCESSORY_LAYOUT_CONFIG.maxY, current.y)
+  };
+  return true;
+}
+
+export function resetAccessoryPositions(save) {
+  save.jellyfish.accessoryPositions = createDefaultAccessoryPositions();
+  return save.jellyfish.accessoryPositions;
+}
+
 export function equipAccessory(save, accessoryId) {
   const accessory = ACCESSORIES.find((item) => item.id === accessoryId);
 
@@ -486,14 +538,13 @@ export function equipAccessory(save, accessoryId) {
   }
 
   const equippedAccessories = getEquippedAccessories(save);
-  const replacedId = equippedAccessories.find((equippedId) => ACCESSORIES.find((item) => item.id === equippedId)?.slot === accessory.slot) || null;
 
   save.jellyfish.equippedAccessories = [
-    ...equippedAccessories.filter((equippedId) => equippedId !== accessoryId && equippedId !== replacedId),
+    ...equippedAccessories.filter((equippedId) => equippedId !== accessoryId),
     accessoryId
   ];
 
-  return { ok: true, replacedId };
+  return { ok: true, replacedId: null };
 }
 
 export function unequipAccessory(save, accessoryId) {

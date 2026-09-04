@@ -1,5 +1,6 @@
 import {
   ACCESSORIES,
+  ACCESSORY_LAYOUT_CONFIG,
   BATTLE_CONFIG,
   BATTLE_SHOP_ITEMS,
   CHAT_LINES,
@@ -27,9 +28,12 @@ import {
   equipSkin,
   forceNextDay,
   getCurrentStage,
+  getAccessoryPosition,
   getEquippedAccessories,
   getFoodQuantity,
+  resetAccessoryPositions,
   petJellyfish,
+  setAccessoryPosition,
   unequipAccessory
 } from "./state.js";
 import {
@@ -79,6 +83,8 @@ let onboardingStep = "name";
 let pendingJellyfishName = "";
 let selectedBaseColor = GAME_CONFIG.initialBaseColor;
 let debugCollapsed = true;
+let accessoryEditMode = false;
+let accessoryDrag = null;
 const debugEnabled = new URLSearchParams(window.location.search).get("debug") === "1";
 
 const viewIds = ["home", "shop", "challenge", "inventory", "collection"];
@@ -155,7 +161,7 @@ function renderViews() {
 
   if (!save) return;
 
-  renderHome(containers.home, save);
+  renderHome(containers.home, save, { accessoryEditMode });
   renderShop(containers.shop, save, shopCategory, shopQuantities);
   renderChallenge(containers.challenge, save, battleState, battleActionSelection);
   renderInventory(containers.inventory, save, inventoryCategory);
@@ -194,6 +200,114 @@ function animateAvatar(actionClass) {
   void character.offsetWidth;
   character.classList.add(actionClass);
   window.setTimeout(() => character.classList.remove(actionClass), 1100);
+}
+
+function clampAccessoryCoordinate(value, minimum, maximum) {
+  return Math.min(maximum, Math.max(minimum, value));
+}
+
+function getAccessoryDragTarget(event) {
+  if (!accessoryEditMode || currentView !== "home" || !save) {
+    return null;
+  }
+
+  const target = event.target.closest?.(".jelly-accessory.is-draggable");
+  return target?.closest("#jelly-display .jelly-character.accessory-edit-mode") ? target : null;
+}
+
+function handleAccessoryPointerDown(event) {
+  const target = getAccessoryDragTarget(event);
+  if (!target || accessoryDrag) return;
+
+  const character = target.closest(".jelly-character");
+  const rect = character?.getBoundingClientRect();
+  const accessoryId = target.dataset.accessoryId;
+
+  if (!character || !rect || !rect.width || !rect.height || !accessoryId) return;
+
+  const currentPosition = getAccessoryPosition(save, accessoryId);
+  const centerX = rect.left + (currentPosition.x / 100) * rect.width;
+  const centerY = rect.top + (currentPosition.y / 100) * rect.height;
+
+  accessoryDrag = {
+    accessoryId,
+    character,
+    pointerId: event.pointerId,
+    target,
+    offsetX: event.clientX - centerX,
+    offsetY: event.clientY - centerY,
+    position: currentPosition
+  };
+
+  target.classList.add("is-dragging");
+  target.setAttribute("aria-grabbed", "true");
+  target.setPointerCapture?.(event.pointerId);
+  event.preventDefault();
+}
+
+function handleAccessoryPointerMove(event) {
+  if (!accessoryDrag || accessoryDrag.pointerId !== event.pointerId) return;
+
+  const { character, offsetX, offsetY, target } = accessoryDrag;
+  const rect = character.getBoundingClientRect();
+
+  if (!rect.width || !rect.height) return;
+
+  const x = clampAccessoryCoordinate(
+    ((event.clientX - rect.left - offsetX) / rect.width) * 100,
+    ACCESSORY_LAYOUT_CONFIG.minX,
+    ACCESSORY_LAYOUT_CONFIG.maxX
+  );
+  const y = clampAccessoryCoordinate(
+    ((event.clientY - rect.top - offsetY) / rect.height) * 100,
+    ACCESSORY_LAYOUT_CONFIG.minY,
+    ACCESSORY_LAYOUT_CONFIG.maxY
+  );
+
+  accessoryDrag.position = { x, y };
+  target.style.setProperty("--accessory-left", `${x}%`);
+  target.style.setProperty("--accessory-top", `${y}%`);
+  event.preventDefault();
+}
+
+function handleAccessoryPointerUp(event) {
+  if (!accessoryDrag || accessoryDrag.pointerId !== event.pointerId) return;
+
+  const drag = accessoryDrag;
+  accessoryDrag = null;
+
+  setAccessoryPosition(save, drag.accessoryId, drag.position);
+  persist();
+  drag.target.classList.remove("is-dragging");
+  drag.target.setAttribute("aria-grabbed", "false");
+  if (drag.target.hasPointerCapture?.(event.pointerId)) {
+    drag.target.releasePointerCapture(event.pointerId);
+  }
+
+  renderApp();
+  showToast("配件位置已保存。", "success");
+}
+
+function handleAccessoryKeydown(event) {
+  if (!accessoryEditMode || currentView !== "home" || !save) return;
+
+  const target = event.target.closest?.(".jelly-accessory.is-draggable");
+  const accessoryId = target?.dataset.accessoryId;
+  if (!target || !accessoryId || !["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)) return;
+
+  const position = getAccessoryPosition(save, accessoryId);
+  const step = event.shiftKey ? 5 : 2;
+  if (event.key === "ArrowUp") position.y -= step;
+  if (event.key === "ArrowDown") position.y += step;
+  if (event.key === "ArrowLeft") position.x -= step;
+  if (event.key === "ArrowRight") position.x += step;
+
+  setAccessoryPosition(save, accessoryId, position);
+  const nextPosition = getAccessoryPosition(save, accessoryId);
+  target.style.setProperty("--accessory-left", `${nextPosition.x}%`);
+  target.style.setProperty("--accessory-top", `${nextPosition.y}%`);
+  persist();
+  event.preventDefault();
 }
 
 function showLevelUps(levelUps) {
@@ -409,9 +523,8 @@ function handleEquip(itemId, type) {
     renderApp();
     animateAvatar("is-chatting");
 
-    const replacedItem = result.replacedId ? findItem(result.replacedId) : null;
-    showToast(replacedItem ? `已裝備 ${item?.name || "配件"}，替換 ${replacedItem.name}` : `已裝備 ${item?.name || "配件"}`, "success");
-    trackEvent("equip_accessory", { itemId, replacedId: result.replacedId });
+    showToast(`已裝備 ${item?.name || "配件"}，可在養成區自由移動`, "success");
+    trackEvent("equip_accessory", { itemId, equippedCount: getEquippedAccessories(save).length });
     return;
   }
 
@@ -442,6 +555,8 @@ function handleResetSave() {
       save = null;
       battleState = null;
       battleActionSelection = null;
+      accessoryDrag = null;
+      accessoryEditMode = false;
       shopQuantities = {};
       onboardingStep = "name";
       pendingJellyfishName = "";
@@ -538,6 +653,7 @@ function startGameFromOnboarding() {
   onboardingStep = "name";
   battleState = null;
   battleActionSelection = null;
+  accessoryEditMode = false;
   currentView = "home";
   trackEvent("game_open", { baseColor: save.jellyfish.baseColor });
   renderApp();
@@ -551,6 +667,7 @@ function handleAction(actionTarget) {
     case "view": {
       const nextView = viewIds.includes(actionTarget.dataset.view) ? actionTarget.dataset.view : "home";
       leaveBattleIfNeeded(nextView);
+      if (nextView !== "home") accessoryEditMode = false;
       if (nextView === "shop") shopCategory = "battle";
       currentView = nextView;
       trackEvent(currentView === "challenge" ? "boss_challenge_open" : `${currentView === "home" ? "game_open" : `${currentView}_open`}`);
@@ -588,12 +705,14 @@ function handleAction(actionTarget) {
     }
     case "go-inventory":
       leaveBattleIfNeeded("inventory");
+      accessoryEditMode = false;
       currentView = "inventory";
       inventoryCategory = "food";
       renderApp();
       break;
     case "go-shop":
       leaveBattleIfNeeded("shop");
+      accessoryEditMode = false;
       currentView = "shop";
       shopCategory = "battle";
       renderApp();
@@ -601,15 +720,44 @@ function handleAction(actionTarget) {
       break;
     case "go-battle-shop":
       leaveBattleIfNeeded("shop");
+      accessoryEditMode = false;
       currentView = "shop";
       shopCategory = "battle";
       renderApp();
       trackEvent("battle_shop_open");
       break;
     case "go-challenge":
+      accessoryEditMode = false;
       currentView = "challenge";
       renderApp();
       trackEvent("boss_challenge_open");
+      break;
+    case "go-accessory-shop":
+      leaveBattleIfNeeded("shop");
+      accessoryEditMode = false;
+      currentView = "shop";
+      shopCategory = "accessory";
+      renderApp();
+      trackEvent("shop_open", { category: "accessory" });
+      break;
+    case "go-home-accessory-editor":
+      leaveBattleIfNeeded("home");
+      currentView = "home";
+      accessoryEditMode = true;
+      renderApp();
+      break;
+    case "toggle-accessory-editor":
+      if (!save || !getEquippedAccessories(save).length) return;
+      accessoryEditMode = !accessoryEditMode;
+      renderApp();
+      showToast(accessoryEditMode ? "拖曳配件即可調整位置。" : "配件位置已保存。", "info");
+      break;
+    case "reset-accessory-positions":
+      if (!save || !getEquippedAccessories(save).length) return;
+      resetAccessoryPositions(save);
+      persist();
+      renderApp();
+      showToast("配件已回到預設位置。", "success");
       break;
     case "start-battle":
       startBattle();
@@ -812,6 +960,12 @@ function boot() {
       handleAction(actionTarget);
     }
   });
+
+  document.addEventListener("pointerdown", handleAccessoryPointerDown);
+  document.addEventListener("pointermove", handleAccessoryPointerMove, { passive: false });
+  document.addEventListener("pointerup", handleAccessoryPointerUp);
+  document.addEventListener("pointercancel", handleAccessoryPointerUp);
+  document.addEventListener("keydown", handleAccessoryKeydown);
 
   getElement("onboarding-form")?.addEventListener("submit", continueToColorSelection);
   getElement("name-input")?.addEventListener("input", () => {

@@ -266,6 +266,17 @@
     font-size: 0.7rem;
   }
 
+  .accessory-layout-card,
+  .accessory-locker-tip {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .accessory-layout-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
   .level-orb {
     width: 47px;
     height: 47px;

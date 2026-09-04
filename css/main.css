@@ -716,38 +716,44 @@ button:disabled {
 
 .jelly-accessory {
   position: absolute;
+  top: var(--accessory-top, 50%);
+  left: var(--accessory-left, 50%);
   z-index: 3;
   pointer-events: none;
   line-height: 1;
   white-space: nowrap;
   font-size: clamp(1.65rem, 7vw, 2.6rem);
   filter: drop-shadow(0 4px 4px rgba(28, 43, 69, 0.13));
+  transform: translate(-50%, -50%) rotate(var(--accessory-rotation, 0deg)) scale(var(--accessory-scale, 1));
 }
 
-.jelly-accessory[data-accessory-slot="head"] {
-  top: 3%;
-  left: 50%;
-  transform: translate(-50%, -34%) rotate(-6deg);
+.jelly-accessory.is-draggable {
+  z-index: 8;
+  min-width: 2.25rem;
+  min-height: 2.25rem;
+  padding: 0.3rem;
+  border: 1px dashed rgba(83, 139, 178, 0.55);
+  border-radius: 999px;
+  outline: none;
+  cursor: grab;
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+  background: rgba(255, 255, 255, 0.2);
 }
 
-.jelly-accessory[data-accessory-slot="left"] {
-  top: 32%;
-  left: 13%;
-  transform: translate(-50%, -50%) rotate(-14deg);
+.jelly-accessory.is-draggable:hover,
+.jelly-accessory.is-draggable:focus-visible {
+  border-color: rgba(64, 158, 188, 0.9);
+  background: rgba(255, 255, 255, 0.58);
+  box-shadow: 0 0 0 4px rgba(94, 196, 217, 0.16);
 }
 
-.jelly-accessory[data-accessory-slot="face"] {
-  top: 37%;
-  left: 50%;
-  font-size: clamp(1.35rem, 6vw, 2.25rem);
-  transform: translate(-50%, -50%) rotate(-6deg);
-}
-
-.jelly-accessory[data-accessory-slot="right"] {
-  top: 13%;
-  left: 85%;
-  font-size: clamp(1.15rem, 5vw, 2rem);
-  transform: translate(-50%, -50%) rotate(8deg);
+.jelly-accessory.is-draggable.is-dragging {
+  cursor: grabbing;
+  border-style: solid;
+  background: rgba(255, 255, 255, 0.72);
+  filter: drop-shadow(0 8px 8px rgba(28, 43, 69, 0.2));
 }
 
 .jelly-shine {
@@ -811,6 +817,50 @@ button:disabled {
   bottom: 25%;
   left: 25%;
   font-size: 0.85rem;
+}
+
+.accessory-layout-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 12px 10px 0;
+  padding: 12px 13px;
+  border: 1px solid rgba(255, 255, 255, 0.76);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.48);
+}
+
+.accessory-layout-card.is-editing {
+  border-color: rgba(80, 177, 199, 0.34);
+  background: rgba(235, 253, 255, 0.7);
+}
+
+.accessory-layout-copy {
+  min-width: 0;
+}
+
+.accessory-layout-copy strong {
+  display: block;
+  margin-top: 4px;
+  color: var(--ink);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.accessory-layout-copy p {
+  margin: 4px 0 0;
+  color: var(--ink-soft);
+  font-size: 0.66rem;
+  line-height: 1.5;
+}
+
+.accessory-layout-actions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
 }
 
 .jelly-card-footer {
@@ -1482,6 +1532,29 @@ button:disabled {
   color: var(--muted);
   font-size: 0.75rem;
   font-weight: 800;
+}
+
+.accessory-locker-tip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 16px 0;
+  padding: 16px 18px;
+}
+
+.accessory-locker-tip h2 {
+  margin: 5px 0 0;
+  color: var(--ink);
+  font-size: 0.95rem;
+}
+
+.accessory-locker-tip p {
+  max-width: 38rem;
+  margin: 5px 0 0;
+  color: var(--ink-soft);
+  font-size: 0.7rem;
+  line-height: 1.55;
 }
 
 .inventory-summary strong {

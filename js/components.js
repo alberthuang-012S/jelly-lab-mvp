@@ -51,7 +51,7 @@ function renderBottle(item, modifier) {
       <span class="bottle-neck"></span>
       <span class="bottle-body">
         <span class="bottle-highlight"></span>
-        <span class="bottle-label"><strong>${item.name}</strong><small>清淨軟膏</small><i>✦</i></span>
+        <span class="bottle-label"><strong>${item.name}</strong></span>
       </span>
     </span>
   `;

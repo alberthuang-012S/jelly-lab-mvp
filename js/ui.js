@@ -1,5 +1,4 @@
 import {
-  ACCESSORY_SLOTS,
   BATTLE_CONFIG,
   BATTLE_SHOP_GROUPS,
   BATTLE_SHOP_ITEMS,
@@ -13,7 +12,7 @@ import {
 } from "./config.js";
 import { getCollectionProgress, isCollected } from "./collection.js";
 import { getBattleInventorySummary, getInventoryItems, getRewardItems } from "./inventory.js";
-import { getBattleItemQuantity, getExpRequired, getFoodQuantity, getCurrentStage, getNextStage, getStageProgress } from "./state.js";
+import { getBattleItemQuantity, getExpRequired, getFoodQuantity, getCurrentStage, getNextStage, getStageProgress, getEquippedAccessories } from "./state.js";
 import { renderJellyfish, renderJellyfishPreview, getScene, getSkin } from "./jellyfish.js";
 import { getItemStatus, getShopItems, isEquipped, isRepeatableItem } from "./shop.js";
 import { getBattleActionQuantityLimits, getBossForDisplay } from "./battle.js";
@@ -92,7 +91,31 @@ function renderStageTrack(save) {
   `;
 }
 
-export function renderHome(container, save) {
+function renderAccessoryLayoutControls(save, accessoryEditMode = false) {
+  const equippedCount = getEquippedAccessories(save).length;
+
+  if (!equippedCount) {
+    return `
+      <section class="accessory-layout-card">
+        <div class="accessory-layout-copy"><span class="card-kicker">FREE ACCESSORY LAYOUT</span><strong>自由裝備你的配件</strong><p>先到配件商店取得配件，就能同時裝備多件並自由調整位置。</p></div>
+        <button class="small-action" data-action="go-accessory-shop">挑選配件</button>
+      </section>
+    `;
+  }
+
+  return `
+    <section class="accessory-layout-card ${accessoryEditMode ? "is-editing" : ""}">
+      <div class="accessory-layout-copy"><span class="card-kicker">FREE ACCESSORY LAYOUT</span><strong>自由裝備 · ${equippedCount} 件</strong><p>${accessoryEditMode ? "拖曳主角上的配件到喜歡的位置，放開後會自動保存。" : "配件可以同時裝備，不同配件也能放在你喜歡的位置。"}</p></div>
+      <div class="accessory-layout-actions">
+        <button class="small-action ${accessoryEditMode ? "button-primary" : ""}" data-action="toggle-accessory-editor">${accessoryEditMode ? "完成調整" : "調整位置"}</button>
+        ${accessoryEditMode ? `<button class="small-action button-quiet" data-action="reset-accessory-positions">回復預設</button>` : ""}
+      </div>
+    </section>
+  `;
+}
+
+export function renderHome(container, save, options = {}) {
+  const accessoryEditMode = options.accessoryEditMode === true;
   const jellyfish = save.jellyfish;
   const stage = getCurrentStage(save);
   const nextStage = getNextStage(save);
@@ -132,9 +155,11 @@ export function renderHome(container, save) {
           <span class="star star-a">✦</span>
           <span class="star star-b">✦</span>
           <div id="jelly-display" class="jelly-display">
-            ${renderJellyfish(save)}
+            ${renderJellyfish(save, { accessoryEditMode })}
           </div>
         </div>
+
+        ${renderAccessoryLayoutControls(save, accessoryEditMode)}
 
         <div class="jelly-card-footer">
           <div>
@@ -272,7 +297,7 @@ function renderShopVisual(save, item) {
   }
 
   if (["weapon", "recovery", "ointment"].includes(item.type)) {
-    const detail = item.type === "weapon" ? `${item.damage} Damage` : item.type === "recovery" ? `HP +${item.heal}` : "解除癢";
+    const detail = item.type === "weapon" ? `${item.damage} Damage` : item.type === "recovery" ? `HP +${item.heal}` : "乳霜 · 解除癢";
     return `
       <div class="item-visual battle-item-preview battle-${item.category}">
         <div class="battle-item-content">
@@ -301,7 +326,7 @@ function renderShopCard(save, item, shopQuantities = {}) {
   const itemDetail = item.type === "food"
     ? `EXP +${item.exp}`
     : isBattleItem
-      ? item.type === "weapon" ? `傷害 ${item.damage}` : item.type === "recovery" ? `回血 +${item.heal}` : "解除癢"
+      ? item.type === "weapon" ? `傷害 ${item.damage}` : item.type === "recovery" ? `回血 +${item.heal}` : "乳霜 · 解除癢"
       : `LV${requiredLevel} 解鎖`;
   let actionLabel = status.label;
 
@@ -350,8 +375,8 @@ export function renderShop(container, save, category, shopQuantities = {}) {
       ? "每一口都會轉化成 EXP。"
       : category === "skin"
         ? "解鎖一個造型，就多認識水母一點。"
-        : category === "accessory"
-          ? "小小 Overlay，也能讓主角更有個性。"
+      : category === "accessory"
+          ? "可同時裝備多件配件，回到養成區拖曳調整位置。"
           : "只改變角色區，保留你熟悉的 Jelly Lab。";
 
   container.innerHTML = `
@@ -398,12 +423,11 @@ function renderInventoryCard(save, item, category) {
   const isAccessory = category === "accessory";
   const action = category === "food" ? "feed" : category === "battle" ? "go-challenge" : category === "skin" ? "equip-skin" : category === "accessory" ? "equip-accessory" : "equip-scene";
   const buttonLabel = category === "food" ? "餵食" : category === "battle" ? "前往挑戰" : isAccessory ? equipped ? "卸下" : "裝備" : equipped ? "使用中" : "裝備";
-  const accessorySlot = isAccessory ? ACCESSORY_SLOTS[item.slot] : null;
   const itemDescription = category === "food"
     ? `EXP +${item.exp} · ${item.description}`
     : category === "battle"
       ? item.type === "weapon" ? `傷害 ${item.damage} · ${item.description}` : item.type === "recovery" ? `HP +${item.heal} · ${item.description}` : item.description
-      : accessorySlot ? `${accessorySlot.label} · ${item.description}` : item.description;
+      : isAccessory ? `可自由移動 · ${item.description}` : item.description;
 
   return `
     <article class="inventory-card ${equipped ? "is-equipped" : ""} ${category === "battle" ? "is-battle-inventory" : ""}">
@@ -439,7 +463,7 @@ export function renderInventory(container, save, category) {
   const categoryLabels = { food: "食物", battle: "戰鬥用品", skin: "水母造型", accessory: "配件", scene: "場景", rewards: "我的獎勵" };
   const emptyCopy = {
     food: "去商店準備一點好吃的，水母會期待你回來。",
-    battle: "去戰鬥商店準備膠囊、飲料與藥膏。",
+    battle: "去戰鬥商店準備膠囊、飲料與乳霜。",
     skin: "去商店解鎖第一個新造型吧。",
     accessory: "研究室還有一些配件等你發現。",
     scene: "換個場景，讓角色區有新的心情。",
@@ -456,6 +480,7 @@ export function renderInventory(container, save, category) {
     <div class="category-tabs inventory-tabs" role="tablist" aria-label="背包分類">
       ${Object.entries(categoryLabels).map(([id, label]) => `<button role="tab" aria-selected="${id === category}" class="category-tab ${id === category ? "is-active" : ""}" data-action="inventory-category" data-category="${id}">${label}</button>`).join("")}
     </div>
+    ${category === "accessory" ? `<section class="accessory-locker-tip glass-card"><div><span class="card-kicker">FREE ACCESSORY LAYOUT</span><h2>自由裝備與移動</h2><p>所有已購買的配件都能一起裝備，並在養成區直接拖曳調整位置。</p></div><button class="small-action" data-action="go-home-accessory-editor">前往調整</button></section>` : ""}
     <div class="inventory-summary"><span>${categoryLabels[category]}</span><strong>${items.length} 項</strong></div>
     ${items.length ? `<div class="inventory-list">${items.map((item) => renderInventoryCard(save, item, category)).join("")}</div>` : `<div class="empty-state"><span>${category === "food" ? "🍽️" : "🫧"}</span><h2>這裡還是空的</h2><p>${emptyCopy[category]}</p><button class="outline-button" data-action="go-shop">前往商店</button></div>`}
   `;
@@ -527,7 +552,7 @@ function renderBattleActionItem(save, battle, item, canAct, battleActionSelectio
   const disabled = !canAct || limits.max <= 0;
   const statusHint = quantity <= 0 ? "無庫存" : blockedByEffect ? isRecovery ? "HP 已滿" : "無癢可解" : battleActionSelection?.itemId === item.id ? "收起" : "選擇";
   const highlight = (isRecovery && battle.player.status.blurred) || (isOintment && battle.player.status.itchy);
-  const detail = isWeapon ? `${item.damage} Damage` : isRecovery ? `HP +${item.heal} · 解模糊` : "解除癢";
+  const detail = isWeapon ? `${item.damage} Damage` : isRecovery ? `HP +${item.heal} · 解模糊` : "乳霜 · 解除癢";
   const isSelected = canAct && battleActionSelection?.itemId === item.id && limits.max > 0;
   const selectedQuantity = isSelected ? Math.min(limits.max, normalizeUiQuantity(battleActionSelection.quantity)) : 1;
   const expectedValue = isWeapon
@@ -544,7 +569,7 @@ function renderBattleActionItem(save, battle, item, canAct, battleActionSelectio
       ${isSelected ? `
         <div class="battle-action-panel">
           <div class="battle-action-panel-heading"><strong>使用 ${item.name}</strong><span>庫存 ×${quantity}</span></div>
-          <div class="battle-action-panel-meta"><span>${isWeapon ? `單顆 Damage：${item.damage}` : isRecovery ? `每罐 HP +${item.heal}` : "解除癢 · 固定使用 1 個"}</span><strong>${isWeapon ? `預計 Damage：${expectedValue}` : isRecovery ? `預計回血：+${expectedValue} HP` : "狀態解除"}</strong></div>
+          <div class="battle-action-panel-meta"><span>${isWeapon ? `單顆 Damage：${item.damage}` : isRecovery ? `每罐 HP +${item.heal}` : "乳霜 · 固定使用 1 個"}</span><strong>${isWeapon ? `預計 Damage：${expectedValue}` : isRecovery ? `預計回血：+${expectedValue} HP` : "狀態解除"}</strong></div>
           ${isOintment ? `<div class="battle-single-quantity">使用數量：<strong>1</strong></div>` : renderQuantitySelector({ quantity: selectedQuantity, max: limits.max, itemId: item.id, decreaseAction: "battle-quantity-decrease", increaseAction: "battle-quantity-increase", inputAction: "battle-quantity-input", label: "戰鬥使用數量" })}
           <div class="battle-action-panel-actions"><button type="button" class="battle-cancel-button" data-action="battle-cancel-action">取消</button><button type="button" class="battle-confirm-button" data-action="battle-confirm-action" data-battle-action="${item.id}" data-quantity="${selectedQuantity}">使用 ${item.name} ×${selectedQuantity}</button></div>
         </div>

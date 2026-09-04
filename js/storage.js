@@ -27,6 +27,8 @@ export function loadSave() {
     const needsMigration = parsed.version !== GAME_CONFIG.version
       || !parsed.jellyfish?.baseColor
       || !Array.isArray(parsed.jellyfish?.equippedAccessories)
+      || !parsed.jellyfish?.accessoryPositions
+      || Array.isArray(parsed.jellyfish?.accessoryPositions)
       || !parsed.inventory?.battleItems
       || !parsed.bossProgress
       || !parsed.rewards;

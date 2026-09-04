@@ -1,6 +1,6 @@
-# 水母養成所 Jelly Lab V2.6
+# 水母養成所 Jelly Lab V2.7
 
-Jelly Lab V2.6 是在既有養成與 BOSS 挑戰 MVP 上更新外用藥膏名稱與 Visual。延續多配件裝備、共用戰鬥商品 Visual、批量購買／使用與水母顏色選擇，這版將 NAP+1 的對外顯示改為 PPA+1，並保留舊存檔的養成、戰鬥與物品資料。專案仍使用 HTML5、CSS3、Vanilla JavaScript 與 `localStorage`，不需要後端、帳號或 npm 依賴即可遊玩。
+Jelly Lab V2.7 是在既有養成與 BOSS 挑戰 MVP 上更新 PPA+1 乳霜視覺與自由配件配置。延續多配件裝備、共用戰鬥商品 Visual、批量購買／使用與水母顏色選擇，這版讓所有已擁有配件都能同時裝備，並可在養成主角區拖曳到喜歡的位置。專案仍使用 HTML5、CSS3、Vanilla JavaScript 與 `localStorage`，不需要後端、帳號或 npm 依賴即可遊玩。
 
 ## 啟動方式
 
@@ -137,30 +137,41 @@ https://<GitHub帳號>.github.io/<repository名稱>/?debug=1
 ### V2.5 多配件裝備
 
 - Save 版本提升至 `version: 4`，不會因版本更新強制清除既有 localStorage。
-- 水母配件改為 `jellyfish.equippedAccessories` 陣列，最多同時裝備頭部、左側裝飾、臉部、右側裝飾四個槽位。
+- 水母配件改為 `jellyfish.equippedAccessories` 陣列，為 V2.7 自由裝備功能奠定資料結構。
 - 舊存檔的 `jellyfish.equippedAccessory` 會自動轉入新陣列，原有配件與其他養成資料盡可能保留。
-- 同一槽位重新裝備時只替換該槽位，其他槽位不受影響；背包可直接切換「裝備／卸下」。
+- 背包可直接切換「裝備／卸下」；V2.7 進一步移除同一槽位的替換限制。
 - 家中主角、戰鬥畫面與角色輔助文字會同步顯示目前多件配件；造型商店與圖鑑預覽仍維持獨立預覽，不會誤帶入玩家裝備。
-- 配件加入頭部、左側、臉部、右側的集中槽位設定，視覺位置由 `css/main.css` 統一管理。
+- 配件保留既有 `slot` 資料作為舊資料相容資訊；目前實際位置與裝備數量由 V2.7 自由配置資料管理。
 
-### V2.6 PPA+1 外用藥膏更新
+### V2.6 PPA+1 外觀更新
 
 - NAP+1 對外顯示名稱改為 **PPA+1**，商店、背包、準備畫面、Battle、提示與 Debug 皆同步更新。
-- 使用白色按壓瓶 CSS Visual，加入瓶身、瓶頸、按壓頭與淡紫色 PPA 標籤，並與商店、背包、Battle 共用。
+- 使用簡潔白色按壓瓶 CSS Visual，加入清楚的瓶身、瓶頸、按壓頭與只保留 PPA+1 的標籤，並與商店、背包、Battle 共用。
 - 保留內部 `id: ointment_nap` 與 `storageKey: NAP`，舊玩家庫存不會消失，也不需要清除 localStorage 或新增 Save Migration。
+
+### V2.7 PPA+1 乳霜與自由配件配置
+
+- PPA+1 的商品內容改為乳霜；外用分類、商店效果、戰鬥提示與背包說明同步使用「乳霜」文字。
+- PPA+1 按壓瓶 Visual 改為較瘦的遊戲道具圖示，泵頭與噴嘴更清楚，瓶身標籤只顯示 `PPA+1`。
+- Save 版本提升至 `version: 5`；舊有 points、LV、EXP、親密度、戰鬥用品、Coupon、Skin、配件與場景都會保留。
+- 配件取消單一 slot 的互斥限制；所有已購買配件都可以同時裝備，也可以個別卸下。
+- 新增 `jellyfish.accessoryPositions`，每件配件保存 X／Y 百分比位置；預設位置集中於 `config.js` 的 `defaultPosition`。
+- 養成首頁新增「調整位置」模式：可用滑鼠或觸控拖曳配件，放開後立即寫入 localStorage；也支援方向鍵微調與「回復預設」。
+- 背包的配件分類新增自由配置說明與「前往調整」入口；離開編輯模式後角色、戰鬥畫面與 Refresh 都會沿用已保存位置。
 
 ## Save Migration 做法
 
-`GAME_CONFIG.version` 目前為 `4`。`storage.js` 讀取既有 `jellyLabSave` 後交由 `normalizeSave()` 正規化：
+`GAME_CONFIG.version` 目前為 `5`。`storage.js` 讀取既有 `jellyLabSave` 後交由 `normalizeSave()` 正規化：
 
 1. 保留舊玩家的 points、LV、EXP、親密度、裝備、背包、圖鑑與每日資料。
 2. 缺少的 `jellyfish.baseColor` 自動補為 `yellow`，保留原本 `equippedSkin`。
 3. 缺少的 `inventory.battleItems` 補成 KTT、PNN、QCC、RNN、PPT、NAP 六個數量欄位，初始皆為 0；既有數量完整保留。`NAP` 為 PPA+1 的相容保存鍵。
 4. 缺少的 `bossProgress.agingMonster` 補上 `defeated`、`clearCount`、`rewardClaimed`。
 5. 缺少的 `rewards.coupons` 補成空陣列，既有 Coupon 完整保留並去除重複 ID。
-6. 缺少 `jellyfish.equippedAccessories` 時，若存在舊的單一 `equippedAccessory` 就轉成一件配件陣列；同槽位重複資料會正規化為一件，且只保留玩家實際擁有的配件。
-7. 版本不是 4 或缺少多配件欄位時，將正規化結果回寫 localStorage；不會因升級主動清除舊存檔。
-8. 新建立的 Save 與 Reset Save 走 `createDefaultSave()`，使用 50,000 點並保存選定的 `baseColor`；既有 Save 的 points 不會被自動改寫。
+6. 缺少 `jellyfish.equippedAccessories` 時，若存在舊的單一 `equippedAccessory` 就轉成一件配件陣列；現在不再依 `slot` 過濾，因此同類型配件也能並存。
+7. 缺少 `jellyfish.accessoryPositions` 時，依 `config.js` 每件配件的 `defaultPosition` 補齊 X／Y；既有合法位置會保留，超出可視範圍的值會被限制在 4～96%。
+8. 版本不是 5 或缺少自由配件欄位時，將正規化結果回寫 localStorage；不會因升級主動清除舊存檔。
+9. 新建立的 Save 與 Reset Save 走 `createDefaultSave()`，使用 50,000 點並保存選定的 `baseColor`；既有 Save 的 points 不會被自動改寫。
 
 Battle 中的 HP、Boss HP、狀態、回合、Battle Log 都只存在 `battle.js` 的記憶體狀態，離開或 Refresh 即結束該場戰鬥，不會污染養成系統資料。
 
@@ -241,3 +252,9 @@ Battle 中的 HP、Boss HP、狀態、回合、Battle Log 都只存在 `battle.j
 | V2.6：戰鬥使用 PPA+1，解除癢狀態且庫存 1 → 0 | 通過；Boss 後續回合可重新施加其他狀態，原解除紀錄保留在 Battle Log |
 | V2.6：PPA+1 白色按壓瓶 Visual 在商店、背包、Battle 共用 | 通過；瓶身、按壓頭與 PPA+1 標籤均可見 |
 | V2.6：320px 商店／Battle 顯示 PPA+1 且無橫向 Scroll | 通過；Visual 與卡片均在視窗範圍內 |
+| V2.7：PPA+1 內容與外用分類改為乳霜、瓶身標籤只保留 PPA+1 | 通過；商店卡片、戰鬥用品與商品 Visual 均已更新 |
+| V2.7：舊 Save Migration 至 version 5，保留既有配件並補 accessoryPositions | 通過；舊版同 slot 配件可一併讀取 |
+| V2.7：多件配件可同時裝備，不會因同 slot 替換 | 通過；本機購買並立即裝備 3 件後均顯示已裝備 |
+| V2.7：首頁調整位置、滑鼠／觸控拖曳、方向鍵微調與回復預設 | 通過；實際拖曳皇冠後位置保存，回復預設回到設定值 |
+| V2.7：Refresh 後配件位置、點數與已裝備狀態保留 | 通過；重新整理後仍讀取拖曳後的 X／Y 百分比 |
+| V2.7：320px 配件編輯器、PPA+1 商店與新提示無橫向 Scroll | 通過；本機測得 document／body scrollWidth 305px，小於 320px |

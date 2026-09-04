@@ -141,14 +141,14 @@ export const FOODS = [
     shortName: "BBB+2",
     icon: "🍫",
     visualType: "chocolate-clear",
-    visualAccent: "#d6e9ec",
-    visualSecondary: "#fffdf5",
-    visualText: "#6b5d54",
-    visualMark: "◌",
+    visualAccent: "#24232a",
+    visualSecondary: "#eef7f8",
+    visualText: "#ffffff",
+    visualMark: "✦",
     requiredLevel: 1,
     exp: 100,
     price: 200,
-    description: "透明包裝的黃白巧克力，閃著亮睛睛的光。"
+    description: "透明包裝保留約一成透光感，裡面九成是濃郁黑巧克力。"
   },
   {
     id: "food_bf02",

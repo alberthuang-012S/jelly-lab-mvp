@@ -9,14 +9,14 @@ import {
   REWARDS_CONFIG,
   SHOP_CATEGORIES,
   SKINS
-} from "./config.js?v=2.15.0";
-import { getCollectionProgress, isCollected } from "./collection.js?v=2.15.0";
-import { getBattleInventorySummary, getInventoryItems, getRewardItems } from "./inventory.js?v=2.15.0";
-import { getBattleItemQuantity, getExpRequired, getFoodQuantity, getCurrentStage, getNextStage, getStageProgress, getEquippedAccessories } from "./state.js?v=2.15.0";
-import { renderJellyfish, renderJellyfishPreview, getScene, getSkin } from "./jellyfish.js?v=2.15.0";
-import { getItemStatus, getShopItems, isEquipped, isRepeatableItem } from "./shop.js?v=2.15.0";
-import { getBattleActionQuantityLimits, getBossForDisplay } from "./battle.js?v=2.15.0";
-import { renderBattleItemVisual, renderFoodVisual } from "./components.js?v=2.15.0";
+} from "./config.js?v=2.15.1";
+import { getCollectionProgress, isCollected } from "./collection.js?v=2.15.1";
+import { getBattleInventorySummary, getInventoryItems, getRewardItems } from "./inventory.js?v=2.15.1";
+import { getBattleItemQuantity, getExpRequired, getFoodQuantity, getCurrentStage, getNextStage, getStageProgress, getEquippedAccessories } from "./state.js?v=2.15.1";
+import { renderJellyfish, renderJellyfishPreview, getScene, getSkin } from "./jellyfish.js?v=2.15.1";
+import { getItemStatus, getShopItems, isEquipped, isRepeatableItem } from "./shop.js?v=2.15.1";
+import { getBattleActionQuantityLimits, getBossForDisplay } from "./battle.js?v=2.15.1";
+import { renderBattleItemVisual, renderFoodVisual } from "./components.js?v=2.15.1";
 
 export function escapeHtml(value) {
   return String(value)

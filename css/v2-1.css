@@ -1,4 +1,4 @@
-/* Jelly Lab V2.1/V2.2/V2.6/V2.7/V2.8/V2.9/V2.9.1/V2.9.2/V2.9.3/V2.10/V2.11 · visual system, quantity controls, onboarding color choice, and alignment */
+/* Jelly Lab V2.1/V2.2/V2.6/V2.7/V2.8/V2.9/V2.9.1/V2.9.2/V2.9.3/V2.10/V2.11/V2.15 · visual system, quantity controls, onboarding color choice, and alignment */
 
 /* Shared food package visuals */
 
@@ -111,13 +111,16 @@
 }
 
 .food-visual-chocolate-clear::after {
-  top: 25px;
-  width: 48px;
-  height: 25px;
-  border: 1px solid rgba(142, 105, 75, 0.26);
-  border-radius: 5px;
-  background: linear-gradient(90deg, #fff8df 0 49%, #c99a70 50% 100%);
-  opacity: 0.82;
+  top: 50%;
+  left: 50%;
+  width: 74px;
+  height: 54px;
+  border: 1px solid rgba(23, 24, 30, 0.36);
+  border-radius: 7px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.28) 0 8%, transparent 8% 100%), linear-gradient(90deg, #111116 0 52%, #2c2931 52% 100%), var(--food-accent);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.18), inset 0 -7px 9px rgba(0, 0, 0, 0.28), 0 3px 5px rgba(31, 35, 46, 0.2);
+  opacity: 0.96;
+  transform: translate(-50%, -50%);
 }
 
 .food-visual-breakfast-orange::before {

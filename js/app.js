@@ -10,11 +10,11 @@ import {
   QUANTITY_CONFIG,
   SCENES,
   SKINS
-} from "./config.js?v=2.15.0";
+} from "./config.js?v=2.15.1";
 import { trackEvent } from "./analytics.js";
-import { feedFood, getInventoryItems } from "./inventory.js?v=2.15.0";
-import { getScene } from "./jellyfish.js?v=2.15.0";
-import { purchaseItem, getShopItems } from "./shop.js?v=2.15.0";
+import { feedFood, getInventoryItems } from "./inventory.js?v=2.15.1";
+import { getScene } from "./jellyfish.js?v=2.15.1";
+import { purchaseItem, getShopItems } from "./shop.js?v=2.15.1";
 import {
   addBattleItem,
   addExp,
@@ -36,7 +36,7 @@ import {
   petJellyfish,
   setAccessoryPosition,
   unequipAccessory
-} from "./state.js?v=2.15.0";
+} from "./state.js?v=2.15.1";
 import {
   beginPlayerAction,
   claimBossReward,
@@ -50,8 +50,8 @@ import {
   recordBossVictory,
   resetBossReward,
   resolveBossTurn
-} from "./battle.js?v=2.15.0";
-import { clearSave, createAndPersistSave, loadSave, persistSave } from "./storage.js?v=2.15.0";
+} from "./battle.js?v=2.15.1";
+import { clearSave, createAndPersistSave, loadSave, persistSave } from "./storage.js?v=2.15.1";
 import {
   closeModal,
   escapeHtml,
@@ -71,8 +71,8 @@ import {
   showPurchaseSuccess,
   showToast,
   updateHeader
-} from "./ui.js?v=2.15.0";
-import { renderFoodVisual } from "./components.js?v=2.15.0";
+} from "./ui.js?v=2.15.1";
+import { renderFoodVisual } from "./components.js?v=2.15.1";
 
 let save = loadSave();
 let currentView = "home";

@@ -972,20 +972,21 @@
 }
 
 @keyframes battle-player-shake {
-  0%, 100% { transform: translateX(0) scale(var(--stage-scale, 0.83)); }
-  25% { transform: translateX(-7px) rotate(-3deg) scale(var(--stage-scale, 0.83)); }
-  55% { transform: translateX(7px) rotate(3deg) scale(var(--stage-scale, 0.83)); }
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg) scale(var(--stage-scale, 0.83)); }
+  25% { transform: translate3d(-7px, 0, 0) rotate(-3deg) scale(calc(var(--stage-scale, 0.83) + 0.02)); }
+  55% { transform: translate3d(7px, 0, 0) rotate(3deg) scale(calc(var(--stage-scale, 0.83) - 0.015)); }
+  78% { transform: translate3d(-3px, 0, 0) rotate(-1deg) scale(var(--stage-scale, 0.83)); }
 }
 
 @keyframes battle-player-itch {
-  0%, 100% { transform: translateX(0) scale(var(--stage-scale, 0.83)); }
-  30% { transform: translateX(-5px) rotate(-2deg) scale(var(--stage-scale, 0.83)); }
-  60% { transform: translateX(5px) rotate(2deg) scale(var(--stage-scale, 0.83)); }
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg) scale(var(--stage-scale, 0.83)); }
+  30% { transform: translate3d(-5px, 0, 0) rotate(-2deg) scale(calc(var(--stage-scale, 0.83) + 0.01)); }
+  60% { transform: translate3d(5px, 0, 0) rotate(2deg) scale(calc(var(--stage-scale, 0.83) - 0.01)); }
 }
 
 @keyframes battle-support-pulse {
-  0%, 100% { transform: scale(var(--stage-scale, 0.83)); filter: brightness(1); }
-  45% { transform: scale(calc(var(--stage-scale, 0.83) + 0.08)); filter: brightness(1.1); }
+  0%, 100% { transform: translate3d(0, 0, 0) scale(var(--stage-scale, 0.83)); filter: brightness(1); }
+  45% { transform: translate3d(0, -3px, 0) scale(calc(var(--stage-scale, 0.83) + 0.08)); filter: brightness(1.1); }
 }
 
 @keyframes battle-effect-rise {

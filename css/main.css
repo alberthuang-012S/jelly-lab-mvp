@@ -386,11 +386,30 @@ button:disabled {
   height: 100%;
 }
 
+.jelly-ground-shadow {
+  position: absolute;
+  z-index: 0;
+  right: 18%;
+  bottom: 5%;
+  left: 18%;
+  height: 11%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(48, 75, 105, 0.24) 0%, rgba(48, 75, 105, 0.12) 42%, rgba(48, 75, 105, 0) 74%);
+  filter: blur(6px);
+  opacity: 0.78;
+  pointer-events: none;
+  transform: scaleX(1.08);
+  transform-origin: center;
+}
+
 .jelly-image {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: contain;
+  object-position: center;
+  position: relative;
+  z-index: 1;
   user-select: none;
   pointer-events: none;
 }
@@ -678,8 +697,9 @@ button:disabled {
   width: 100%;
   height: 100%;
   transform: scale(var(--stage-scale));
-  animation: jelly-float 4s ease-in-out infinite;
+  animation: jelly-float 4.8s ease-in-out infinite;
   transform-origin: center;
+  will-change: transform;
 }
 
 .jelly-character.accessory-edit-mode {
@@ -745,10 +765,30 @@ button:disabled {
 
 .jelly-accessory-visual {
   display: grid;
+  min-width: 1em;
+  min-height: 1em;
   place-items: center;
   filter: drop-shadow(0 4px 4px rgba(28, 43, 69, 0.13));
   transform: rotate(var(--accessory-rotation, 0deg)) scale(var(--accessory-scale, 1));
   transform-origin: center;
+}
+
+.jelly-accessory-image {
+  display: block;
+  width: 1em;
+  height: 1em;
+  object-fit: contain;
+  object-position: center;
+}
+
+.jelly-accessory-icon {
+  display: grid;
+  place-items: center;
+  line-height: 1;
+}
+
+.jelly-accessory-icon[hidden] {
+  display: none;
 }
 
 .jelly-accessory.is-draggable {
@@ -863,15 +903,22 @@ button:disabled {
   box-shadow: none;
   font-size: 1rem;
   font-weight: 900;
+  transition: color 120ms ease, background-color 120ms ease, border-color 120ms ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .accessory-toolbar-actions button:hover,
 .accessory-toolbar-actions button:focus-visible {
   border-color: rgba(64, 158, 188, 0.5);
   color: #247f9b;
-  background: #fff;
+  background: rgba(232, 248, 251, 0.92);
   outline: none;
-  box-shadow: 0 0 0 3px rgba(94, 196, 217, 0.16);
+  box-shadow: none;
+}
+
+.accessory-toolbar-actions button:focus-visible {
+  outline: 2px solid rgba(94, 196, 217, 0.5);
+  outline-offset: 2px;
 }
 
 .jelly-shine {
@@ -1526,11 +1573,20 @@ button:disabled {
   display: none;
 }
 
-.accessory-preview span {
+.accessory-preview-visual {
   position: relative;
   z-index: 1;
+  display: grid;
+  width: 3.3rem;
+  height: 3.3rem;
+  place-items: center;
   font-size: 3.3rem;
   filter: drop-shadow(0 8px 7px rgba(89, 105, 122, 0.14));
+}
+
+.accessory-preview-visual .jelly-accessory-image {
+  width: 1em;
+  height: 1em;
 }
 
 .accessory-preview small {
@@ -1716,6 +1772,11 @@ button:disabled {
 .accessory-icon,
 .scene-inventory-preview {
   font-size: 2.1rem;
+}
+
+.accessory-icon .jelly-accessory-image {
+  width: 1em;
+  height: 1em;
 }
 
 .skin-inventory-preview .jelly-character {

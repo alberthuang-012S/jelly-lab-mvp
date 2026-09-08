@@ -1013,7 +1013,7 @@
   animation: none;
 }
 
-.jelly-character.has-base-color .jelly-image {
+.jelly-character.has-base-color.is-legacy-asset .jelly-image {
   filter: hue-rotate(var(--jelly-hue-rotate, 0deg)) saturate(var(--jelly-saturation, 1));
 }
 

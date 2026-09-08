@@ -1,6 +1,8 @@
-# 水母養成所 Jelly Lab V2.16.1
+# 水母養成所 Jelly Lab V2.17.0
 
-Jelly Lab V2.16.1 保留既有水母養成、戰鬥與自由配件配置，將首頁「餵食」改為可直接操作的快速餵食面板：選擇已有食物、調整份數後一次完成批量餵食，立即更新 EXP、等級與庫存。原本背包的單份餵食確認流程仍保留；專案仍使用 HTML5、CSS3、Vanilla JavaScript 與 `localStorage`，不需要後端、帳號或 npm 依賴即可遊玩。
+Jelly Lab V2.17.0 保留既有水母養成、戰鬥與自由配件配置，將首頁「餵食」改為可直接操作的快速餵食面板：選擇已有食物、調整份數後一次完成批量餵食，立即更新 EXP、等級與庫存。原本背包的單份餵食確認流程仍保留；專案仍使用 HTML5、CSS3、Vanilla JavaScript 與 `localStorage`，不需要後端、帳號或 npm 依賴即可遊玩。
+
+V2.17.0 新增預渲染 3D 公仔素材層：角色會優先尋找 `assets/jellyfish-3d/` 的透明 WebP，並在素材不存在時回退至既有 PNG；Save 結構、養成、商店、戰鬥、背包、場景與配件拖曳資料均維持相容。
 
 ## 啟動方式
 
@@ -41,6 +43,7 @@ https://<GitHub帳號>.github.io/<repository名稱>/?debug=1
 ├─ 水母圖.jpg                 # 提供的原始 4×2 水母素材圖
 ├─ assets/
 │  ├─ jellyfish/              # 8 張透明水母 PNG
+│  ├─ jellyfish-3d/           # 預渲染 3D 公仔 WebP 與命名規則
 │  └─ items/
 │     └─ ppa-plus-one.png     # 使用者提供的 PPA+1 乳霜按壓瓶素材
 ├─ tools/slice_jellyfish.py   # 重建水母透明素材的切圖工具
@@ -240,6 +243,15 @@ https://<GitHub帳號>.github.io/<repository名稱>/?debug=1
 - 切換食物、調整數量與輸入份數採面板局部 DOM 更新，保留面板動畫、捲動位置與輸入焦點；只有實際餵食完成後才重繪整個畫面。
 - 餵食完成後立即 `persistSave()`，顯示成功 Toast、餵食動畫與既有 Level Up Modal；快速連點時由面板 Action Lock 防止重複消耗。
 - 沒有食物時顯示友善空狀態，並可直接前往「食物」商店；本版不變更 Save Schema、Battle、商店或背包資料格式。
+
+### V2.17.0 預渲染 3D 角色素材層
+
+- 保留既有 `renderJellyfish()` 呼叫方式，新增 `getJellyfishAssetPath(skinId, baseColorId)` 集中組合 3D 素材路徑。
+- `normal` 依七種 `baseColor` 優先讀取 `jelly-normal-{color}.webp`；其他 skin 優先讀取固定的 `jelly-{skin}.webp`。
+- 3D 素材載入失敗時回退至原本 `assets/jellyfish/` PNG；只有回退的普通水母才使用既有 hue-rotate 配色。
+- 角色增加柔和接地陰影、輕微漂浮與自然縮放／受擊動畫；`object-fit: contain` 與現有場景氣泡、星星保持不變。
+- 配件新增 `asset` 預留欄位，圖片優先、emoji 作為 fallback；既有拖曳、旋轉、縮放與保存邏輯不變。
+- 本版不變更 Save Schema，`GAME_CONFIG.version` 維持 `6`。
 
 ## Save Migration 做法
 

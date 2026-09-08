@@ -10,11 +10,11 @@ import {
   QUANTITY_CONFIG,
   SCENES,
   SKINS
-} from "./config.js?v=2.16.1";
+} from "./config.js?v=2.17.0";
 import { trackEvent } from "./analytics.js";
-import { feedFood, getInventoryItems } from "./inventory.js?v=2.16.1";
-import { getScene } from "./jellyfish.js?v=2.16.1";
-import { purchaseItem, getShopItems } from "./shop.js?v=2.16.1";
+import { feedFood, getInventoryItems } from "./inventory.js?v=2.17.0";
+import { getScene } from "./jellyfish.js?v=2.17.0";
+import { purchaseItem, getShopItems } from "./shop.js?v=2.17.0";
 import {
   addBattleItem,
   addExp,
@@ -36,7 +36,7 @@ import {
   petJellyfish,
   setAccessoryPosition,
   unequipAccessory
-} from "./state.js?v=2.16.1";
+} from "./state.js?v=2.17.0";
 import {
   beginPlayerAction,
   claimBossReward,
@@ -50,8 +50,8 @@ import {
   recordBossVictory,
   resetBossReward,
   resolveBossTurn
-} from "./battle.js?v=2.16.1";
-import { clearSave, createAndPersistSave, loadSave, persistSave } from "./storage.js?v=2.16.1";
+} from "./battle.js?v=2.17.0";
+import { clearSave, createAndPersistSave, loadSave, persistSave } from "./storage.js?v=2.17.0";
 import {
   closeModal,
   escapeHtml,
@@ -72,8 +72,8 @@ import {
   showPurchaseSuccess,
   showToast,
   updateHeader
-} from "./ui.js?v=2.16.1";
-import { renderFoodVisual } from "./components.js?v=2.16.1";
+} from "./ui.js?v=2.17.0";
+import { renderFoodVisual } from "./components.js?v=2.17.0";
 
 let save = loadSave();
 let currentView = "home";
@@ -214,6 +214,15 @@ function renderApp() {
     renderDebugPanel(debugPanel, debugEnabled, save, battleState, debugCollapsed);
     debugPanel.classList.toggle("is-collapsed", debugCollapsed);
   }
+}
+
+function renderAppPreservingScroll() {
+  const scrollX = window.scrollX;
+  const scrollY = window.scrollY;
+
+  renderApp();
+  window.scrollTo(scrollX, scrollY);
+  window.requestAnimationFrame(() => window.scrollTo(scrollX, scrollY));
 }
 
 function animateAvatar(actionClass) {
@@ -487,6 +496,18 @@ function applyAccessoryTransformToDom(target, transform) {
   if (readout) readout.textContent = `${Math.round(transform.rotation)}° · ${Number(transform.scale).toFixed(2)}×`;
 }
 
+function refreshSelectedAccessoryTransform() {
+  if (!save || !selectedAccessoryId) return false;
+
+  const target = document.querySelector(`#jelly-display .jelly-accessory[data-accessory-id="${selectedAccessoryId}"]`);
+  if (!target) return false;
+
+  applyAccessoryTransformToDom(target, getAccessoryPosition(save, selectedAccessoryId));
+  positionAccessoryToolbar();
+  scheduleAccessoryToolbarPosition();
+  return true;
+}
+
 function selectAccessory(accessoryId) {
   if (!getEquippedAccessories(save).includes(accessoryId)) return false;
 
@@ -696,7 +717,7 @@ function adjustSelectedAccessoryTransform(property, delta) {
 
   setAccessoryPosition(save, selectedAccessoryId, transform);
   persist();
-  renderApp();
+  refreshSelectedAccessoryTransform();
 }
 
 function showLevelUps(levelUps) {
@@ -1183,7 +1204,7 @@ function handleAction(actionTarget) {
       if (!save || !getEquippedAccessories(save).length) return;
       accessoryEditMode = !accessoryEditMode;
       selectedAccessoryId = accessoryEditMode ? getEquippedAccessories(save)[0] : null;
-      renderApp();
+      renderAppPreservingScroll();
       showToast(accessoryEditMode ? "單指移動，雙指縮放與旋轉配件。" : "配件配置已保存。", "info");
       break;
     case "adjust-accessory-transform":
@@ -1193,7 +1214,7 @@ function handleAction(actionTarget) {
       if (!save || !selectedAccessoryId) return;
       resetAccessoryPosition(save, selectedAccessoryId);
       persist();
-      renderApp();
+      refreshSelectedAccessoryTransform();
       showToast("目前配件已回到預設位置與大小。", "success");
       break;
     case "reset-accessory-positions":

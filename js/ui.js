@@ -10,14 +10,14 @@ import {
   REWARDS_CONFIG,
   SHOP_CATEGORIES,
   SKINS
-} from "./config.js?v=2.16.1";
-import { getCollectionProgress, isCollected } from "./collection.js?v=2.16.1";
-import { getBattleInventorySummary, getInventoryItems, getRewardItems } from "./inventory.js?v=2.16.1";
-import { getBattleItemQuantity, getExpRequired, getFoodQuantity, getCurrentStage, getNextStage, getStageProgress, getEquippedAccessories } from "./state.js?v=2.16.1";
-import { renderJellyfish, renderJellyfishPreview, getScene, getSkin } from "./jellyfish.js?v=2.16.1";
-import { getItemStatus, getShopItems, isEquipped, isRepeatableItem } from "./shop.js?v=2.16.1";
-import { getBattleActionQuantityLimits, getBossForDisplay } from "./battle.js?v=2.16.1";
-import { renderBattleItemVisual, renderFoodVisual } from "./components.js?v=2.16.1";
+} from "./config.js?v=2.17.0";
+import { getCollectionProgress, isCollected } from "./collection.js?v=2.17.0";
+import { getBattleInventorySummary, getInventoryItems, getRewardItems } from "./inventory.js?v=2.17.0";
+import { getBattleItemQuantity, getExpRequired, getFoodQuantity, getCurrentStage, getNextStage, getStageProgress, getEquippedAccessories } from "./state.js?v=2.17.0";
+import { renderAccessoryVisual, renderJellyfish, renderJellyfishPreview, getScene, getSkin } from "./jellyfish.js?v=2.17.0";
+import { getItemStatus, getShopItems, isEquipped, isRepeatableItem } from "./shop.js?v=2.17.0";
+import { getBattleActionQuantityLimits, getBossForDisplay } from "./battle.js?v=2.17.0";
+import { renderBattleItemVisual, renderFoodVisual } from "./components.js?v=2.17.0";
 
 export function escapeHtml(value) {
   return String(value)
@@ -368,7 +368,7 @@ function renderShopVisual(save, item) {
   }
 
   if (item.type === "accessory") {
-    return `<div class="item-visual accessory-preview"><span>${item.icon}</span><small>Overlay</small></div>`;
+    return `<div class="item-visual accessory-preview"><span class="accessory-preview-visual">${renderAccessoryVisual(item)}</span><small>Overlay</small></div>`;
   }
 
   if (item.type === "scene") {
@@ -486,7 +486,7 @@ function renderInventoryVisual(save, item, category) {
   }
 
   if (category === "accessory") {
-    return `<div class="inventory-icon accessory-icon">${item.icon}</div>`;
+    return `<div class="inventory-icon accessory-icon">${renderAccessoryVisual(item)}</div>`;
   }
 
   if (category === "battle") {
@@ -876,7 +876,7 @@ export function showPurchaseSuccess(item, onEquip, quantity = 1) {
     eyebrow: "JELLY LAB · NEW ARRIVAL",
     title: "🎉 購買成功！",
     className: "success-modal",
-    body: `<div class="success-item">${item.type === "food" ? renderFoodVisual(item, { compact: true }) : `<span>${item.icon || "✦"}</span>`}<strong>獲得：${item.name}${quantityLabel}</strong></div><p>${item.description}</p>`,
+    body: `<div class="success-item">${item.type === "food" ? renderFoodVisual(item, { compact: true }) : item.type === "accessory" ? `<span class="success-accessory-visual">${renderAccessoryVisual(item)}</span>` : `<span>${item.icon || "✦"}</span>`}<strong>獲得：${item.name}${quantityLabel}</strong></div><p>${item.description}</p>`,
     actions: canEquip
       ? [{ label: "稍後", className: "button-quiet" }, { label: "立即裝備", className: "button-primary", onClick: onEquip }]
       : [{ label: "好的", className: "button-primary" }]

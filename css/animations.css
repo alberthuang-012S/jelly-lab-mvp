@@ -1,68 +1,68 @@
 @keyframes jelly-float {
   0%,
   100% {
-    transform: translateY(0) scale(var(--stage-scale, 0.9));
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(var(--stage-scale, 0.9));
   }
 
   50% {
-    transform: translateY(-7px) scale(var(--stage-scale, 0.9));
+    transform: translate3d(0, -6px, 0) rotate(0.8deg) scale(calc(var(--stage-scale, 0.9) + 0.015));
   }
 }
 
 @keyframes jelly-pet {
   0%,
   100% {
-    transform: translateX(0) rotate(0deg) scale(var(--stage-scale, 0.9));
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(var(--stage-scale, 0.9));
   }
 
   18% {
-    transform: translateX(-8px) rotate(-3deg) scale(var(--stage-scale, 0.9));
+    transform: translate3d(-8px, 0, 0) rotate(-3deg) scale(calc(var(--stage-scale, 0.9) + 0.015));
   }
 
   38% {
-    transform: translateX(8px) rotate(3deg) scale(var(--stage-scale, 0.9));
+    transform: translate3d(8px, 0, 0) rotate(3deg) scale(calc(var(--stage-scale, 0.9) - 0.01));
   }
 
   58% {
-    transform: translateX(-5px) rotate(-2deg) scale(var(--stage-scale, 0.9));
+    transform: translate3d(-5px, 0, 0) rotate(-2deg) scale(calc(var(--stage-scale, 0.9) + 0.008));
   }
 
   78% {
-    transform: translateX(4px) rotate(1deg) scale(var(--stage-scale, 0.9));
+    transform: translate3d(4px, 0, 0) rotate(1deg) scale(var(--stage-scale, 0.9));
   }
 }
 
 @keyframes jelly-chat {
   0%,
   100% {
-    transform: translateY(0) scale(var(--stage-scale, 0.9));
+    transform: translate3d(0, 0, 0) scale(var(--stage-scale, 0.9));
   }
 
   30% {
-    transform: translateY(-14px) scale(calc(var(--stage-scale, 0.9) + 0.03));
+    transform: translate3d(0, -14px, 0) rotate(-1deg) scale(calc(var(--stage-scale, 0.9) + 0.03));
   }
 
   54% {
-    transform: translateY(0) scale(var(--stage-scale, 0.9));
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(var(--stage-scale, 0.9));
   }
 
   70% {
-    transform: translateY(-6px) scale(var(--stage-scale, 0.9));
+    transform: translate3d(0, -6px, 0) rotate(0.6deg) scale(calc(var(--stage-scale, 0.9) + 0.012));
   }
 }
 
 @keyframes jelly-feed {
   0%,
   100% {
-    transform: translateY(0) scale(var(--stage-scale, 0.9));
+    transform: translate3d(0, 0, 0) scale(var(--stage-scale, 0.9));
   }
 
   34% {
-    transform: translateY(-6px) scale(calc(var(--stage-scale, 0.9) + 0.08));
+    transform: translate3d(0, -6px, 0) scale(calc(var(--stage-scale, 0.9) + 0.08));
   }
 
   62% {
-    transform: translateY(0) scale(calc(var(--stage-scale, 0.9) - 0.02));
+    transform: translate3d(0, 0, 0) scale(calc(var(--stage-scale, 0.9) - 0.02));
   }
 }
 

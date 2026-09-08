@@ -85,6 +85,13 @@ export const JELLYFISH_COLORS = [
   }
 ];
 
+// 預渲染 3D 角色素材的集中設定；舊版 PNG 路徑仍由各 skin 的 asset 欄位保留。
+export const JELLYFISH_ASSET_CONFIG = {
+  preferredDirectory: "./assets/jellyfish-3d/",
+  fallbackDirectory: "./assets/jellyfish/",
+  preferredExtension: "webp"
+};
+
 export const FOODS = [
   {
     id: "food_candy",
@@ -281,6 +288,7 @@ export const ACCESSORIES = [
     slot: "head",
     name: "海洋皇冠",
     icon: "👑",
+    asset: null,
     price: 180,
     requiredLevel: 3,
     defaultPosition: { x: 40, y: 7, rotation: -6, scale: 1 },
@@ -292,6 +300,7 @@ export const ACCESSORIES = [
     slot: "left",
     name: "珊瑚蝴蝶結",
     icon: "🎀",
+    asset: null,
     price: 160,
     requiredLevel: 2,
     defaultPosition: { x: 14, y: 36, rotation: -14, scale: 1 },
@@ -303,6 +312,7 @@ export const ACCESSORIES = [
     slot: "face",
     name: "研究眼鏡",
     icon: "🕶️",
+    asset: null,
     price: 220,
     requiredLevel: 4,
     defaultPosition: { x: 50, y: 39, rotation: -6, scale: 0.86 },
@@ -314,6 +324,7 @@ export const ACCESSORIES = [
     slot: "right",
     name: "星星髮飾",
     icon: "⭐",
+    asset: null,
     price: 260,
     requiredLevel: 5,
     defaultPosition: { x: 86, y: 19, rotation: 8, scale: 0.72 },
@@ -325,6 +336,7 @@ export const ACCESSORIES = [
     slot: "head",
     name: "小小船長帽",
     icon: "🧢",
+    asset: null,
     price: 300,
     requiredLevel: 6,
     defaultPosition: { x: 62, y: 8, rotation: 5, scale: 0.92 },

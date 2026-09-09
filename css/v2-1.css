@@ -233,9 +233,9 @@
 
 .quick-feed-close {
   display: grid;
-  width: 32px;
-  height: 32px;
-  flex: 0 0 32px;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
   place-items: center;
   padding: 0;
   border: 1px solid rgba(94, 133, 165, 0.16);
@@ -366,6 +366,7 @@
 
 .quick-feed-submit {
   width: 100%;
+  min-height: 44px;
 }
 
 .quick-feed-note {
@@ -764,9 +765,9 @@
 
 .quantity-step {
   display: grid;
-  width: 28px;
-  height: 28px;
-  flex: 0 0 28px;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
   place-items: center;
   border: 1px solid rgba(79, 198, 220, 0.25);
   border-radius: 9px;
@@ -782,7 +783,8 @@
 }
 
 .quantity-control input {
-  width: 52px;
+  width: 56px;
+  min-height: 44px;
   min-width: 0;
   padding: 5px 3px;
   border: 1px solid rgba(94, 133, 165, 0.2);
@@ -888,6 +890,7 @@
 
 .battle-cancel-button,
 .battle-confirm-button {
+  min-height: 44px;
   padding: 8px 10px;
   border-radius: 9px;
   font-size: 0.63rem;

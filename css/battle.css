@@ -527,6 +527,18 @@
   border-radius: var(--radius-md);
 }
 
+.boss-telegraph {
+  margin: 10px 0 0;
+  padding: 10px 13px;
+  border: 1px solid rgba(229, 174, 89, 0.32);
+  border-radius: 12px;
+  color: #9d7134;
+  background: rgba(255, 249, 228, 0.82);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-align: center;
+}
+
 .battle-status-title strong {
   color: #54a789;
   font-size: 0.73rem;
@@ -596,6 +608,7 @@
   gap: 11px;
   width: 100%;
   min-width: 0;
+  min-height: 52px;
   padding: 12px;
   border: 1px solid rgba(79, 198, 220, 0.24);
   border-radius: 14px;
@@ -724,6 +737,7 @@
 
 .battle-use-button {
   min-width: 45px;
+  min-height: 44px;
   padding: 8px 7px;
   border-radius: 9px;
   color: var(--purple);

@@ -10,11 +10,11 @@ import {
   QUANTITY_CONFIG,
   SCENES,
   SKINS
-} from "./config.js?v=2.17.0";
-import { trackEvent } from "./analytics.js";
-import { feedFood, getInventoryItems } from "./inventory.js?v=2.17.0";
-import { getScene } from "./jellyfish.js?v=2.17.0";
-import { purchaseItem, getShopItems } from "./shop.js?v=2.17.0";
+} from "./config.js?v=2.18.0";
+import { startSession, trackEvent, trackFirstMeaningfulInteraction } from "./analytics.js?v=2.18.0";
+import { feedFood, getInventoryItems } from "./inventory.js?v=2.18.0";
+import { getScene } from "./jellyfish.js?v=2.18.0";
+import { getItemStatus, purchaseItem, getShopItems } from "./shop.js?v=2.18.0";
 import {
   addBattleItem,
   addExp,
@@ -22,6 +22,7 @@ import {
   addPoints,
   applyDailyReset,
   chatWithJellyfish,
+  completeDailyCompanion,
   createDefaultSave,
   equipAccessory,
   equipScene,
@@ -36,7 +37,7 @@ import {
   petJellyfish,
   setAccessoryPosition,
   unequipAccessory
-} from "./state.js?v=2.17.0";
+} from "./state.js?v=2.18.0";
 import {
   beginPlayerAction,
   claimBossReward,
@@ -50,8 +51,8 @@ import {
   recordBossVictory,
   resetBossReward,
   resolveBossTurn
-} from "./battle.js?v=2.17.0";
-import { clearSave, createAndPersistSave, loadSave, persistSave } from "./storage.js?v=2.17.0";
+} from "./battle.js?v=2.18.0";
+import { clearSave, createAndPersistSave, loadSave, persistSave } from "./storage.js?v=2.18.0";
 import {
   closeModal,
   escapeHtml,
@@ -71,9 +72,10 @@ import {
   showBattleVictoryModal,
   showPurchaseSuccess,
   showToast,
+  showLevelUpSummaryModal,
   updateHeader
-} from "./ui.js?v=2.17.0";
-import { renderFoodVisual } from "./components.js?v=2.17.0";
+} from "./ui.js?v=2.18.0";
+import { renderFoodVisual } from "./components.js?v=2.18.0";
 
 let save = loadSave();
 let currentView = "home";
@@ -135,7 +137,40 @@ function validateName(value) {
 }
 
 function persist() {
-  persistSave(save);
+  return persistSave(save);
+}
+
+function recordCompanionProgress(action, source = action) {
+  if (!save) return { completed: false, dailyRewardPoints: 0, weeklyRewardPoints: 0 };
+
+  const result = completeDailyCompanion(save, action);
+  if (!result.completed || result.alreadyCompleted) return result;
+
+  trackEvent("daily_companion_complete", {
+    goalId: result.goal?.id,
+    source,
+    rewardPoints: result.dailyRewardPoints
+  });
+  trackEvent("weekly_companion_progress", {
+    completedDays: result.weeklyProgress,
+    targetDays: GAME_CONFIG.weeklyCompanionTargetDays
+  });
+  if (result.weeklyRewardPoints > 0) {
+    trackEvent("weekly_companion_complete", {
+      completedDays: result.weeklyProgress,
+      rewardPoints: result.weeklyRewardPoints
+    });
+  }
+  trackFirstMeaningfulInteraction(save.player.createdAt, { source });
+  return result;
+}
+
+function companionRewardMessage(result) {
+  if (!result?.completed) return "";
+  const rewards = [];
+  if (result.dailyRewardPoints > 0) rewards.push(`今日陪伴 +${formatNumber(result.dailyRewardPoints)} 點`);
+  if (result.weeklyRewardPoints > 0) rewards.push(`本週達標 +${formatNumber(result.weeklyRewardPoints)} 點`);
+  return rewards.length ? ` · ${rewards.join(" · ")}` : "";
 }
 
 function renderNavigation() {
@@ -147,10 +182,22 @@ function renderNavigation() {
 }
 
 function leaveBattleIfNeeded(nextView) {
-  if (battleState && nextView !== "challenge") {
-    battleState = null;
-    battleActionSelection = null;
-  }
+  if (!battleState || nextView === "challenge") return true;
+
+  openConfirm({
+    title: "要離開這場戰鬥嗎？",
+    body: "離開戰鬥將失去本次戰鬥進度，已使用的道具不會恢復。",
+    confirmLabel: "離開戰鬥",
+    tone: "button-danger",
+    onConfirm: () => {
+      battleState = null;
+      battleActionSelection = null;
+      currentView = nextView;
+      trackEvent("battle_end", { outcome: "abandoned", destination: nextView });
+      renderApp();
+    }
+  });
+  return false;
 }
 
 function renderViews() {
@@ -282,7 +329,10 @@ function updateQuickFeedPanelDom() {
   const selectedTotalExp = panel.querySelector("#quick-feed-selected-total-exp");
   if (selectedName) selectedName.textContent = selectedFood.shortName;
   if (selectedMeta) selectedMeta.textContent = `單份 EXP +${formatNumber(selectedFood.exp)} · 剩餘 ×${formatNumber(selectedStock)}`;
-  if (selectedTotalExp) selectedTotalExp.textContent = `本次獲得 EXP +${formatNumber(selectedFood.exp * quickFeedQuantity)}`;
+  const isMaxLevel = save.jellyfish.level >= GAME_CONFIG.maxLevel;
+  if (selectedTotalExp) selectedTotalExp.textContent = isMaxLevel
+    ? "已達最高等級，無法再獲得 EXP"
+    : `本次獲得 EXP +${formatNumber(selectedFood.exp * quickFeedQuantity)}`;
 
   const quantityInput = panel.querySelector("#quick-feed-quantity-input");
   if (quantityInput) {
@@ -299,8 +349,8 @@ function updateQuickFeedPanelDom() {
   const submitButton = panel.querySelector("#quick-feed-submit");
   if (submitButton) {
     submitButton.dataset.foodId = selectedFood.id;
-    submitButton.disabled = quickFeedActionLocked;
-    submitButton.textContent = `🍰 餵食 ${selectedFood.shortName} ×${quickFeedQuantity}`;
+    submitButton.disabled = quickFeedActionLocked || isMaxLevel;
+    submitButton.textContent = isMaxLevel ? "已達最高等級" : `🍰 餵食 ${selectedFood.shortName} ×${quickFeedQuantity}`;
   }
 }
 
@@ -341,6 +391,12 @@ function updateQuickFeedQuantity(foodId, nextQuantity) {
 function handleQuickFeedSubmit() {
   if (!save || !quickFeedOpen || quickFeedActionLocked) return;
 
+  if (save.jellyfish.level >= GAME_CONFIG.maxLevel) {
+    showToast("水母已達最高等級，食物不會被消耗。", "info");
+    updateQuickFeedPanelDom();
+    return;
+  }
+
   const food = getQuickFeedFood();
   if (!food) {
     showToast("目前沒有可餵食的食物，先去商店準備一些吧。", "warning");
@@ -363,7 +419,9 @@ function handleQuickFeedSubmit() {
   const gainedExp = food.exp * result.quantity;
   const levelUps = addExp(save, gainedExp);
   persist();
+  trackEvent("feed_complete", { itemId: food.id, quantity: result.quantity, exp: gainedExp, source: "home_quick_feed" });
   trackEvent("feed_jellyfish", { itemId: food.id, quantity: result.quantity, exp: gainedExp, source: "home_quick_feed" });
+  trackFirstMeaningfulInteraction(save.player.createdAt, { source: "home_quick_feed" });
   closeQuickFeedPanel();
   renderApp();
   animateAvatar("is-feeding");
@@ -723,9 +781,8 @@ function adjustSelectedAccessoryTransform(property, delta) {
 function showLevelUps(levelUps) {
   if (!levelUps.length || !save) return;
 
-  const [current, ...remaining] = levelUps;
-  trackEvent("level_up", { level: current.to });
-  showLevelUpModal(save, current.from, current.to, () => showLevelUps(remaining));
+  levelUps.forEach((levelUp) => trackEvent("level_up", { level: levelUp.to }));
+  showLevelUpSummaryModal(save, levelUps, () => {});
 }
 
 function trackBattleEvents(events = []) {
@@ -769,6 +826,7 @@ function handleBattleOutcome() {
     const result = recordBossVictory(save, currentBattle);
     if (!wasRecorded) {
       trackEvent("boss_defeated", { bossId: currentBattle.boss.id, clearCount: save.bossProgress.agingMonster.clearCount });
+      trackEvent("battle_end", { bossId: currentBattle.boss.id, outcome: "won", clearCount: save.bossProgress.agingMonster.clearCount });
     }
     persist();
     showBattleVictoryModal(save, {
@@ -783,6 +841,7 @@ function handleBattleOutcome() {
   recordBossFailure(currentBattle);
   if (!wasRecorded) {
     trackEvent("boss_failed", { bossId: currentBattle.boss.id });
+    trackEvent("battle_end", { bossId: currentBattle.boss.id, outcome: "lost" });
   }
   showBattleDefeatModal(save, {
     onRetry: () => {
@@ -800,6 +859,7 @@ function startBattle() {
   currentView = "challenge";
   battleState = createBattleState();
   battleActionSelection = null;
+  trackEvent("battle_start", { bossId: battleState.boss.id });
   trackEvent("boss_battle_start", { bossId: battleState.boss.id });
   renderApp();
 }
@@ -849,6 +909,10 @@ function handleBattleAction(actionTarget, quantity = 1) {
 }
 
 function openFeedModal(food) {
+  if (!food || save?.jellyfish?.level >= GAME_CONFIG.maxLevel) {
+    showToast("水母已達最高等級，食物不會被消耗。", "info");
+    return;
+  }
   const quantity = getFoodQuantity(save, food.id);
   openConfirm({
     title: `餵給${escapeHtml(save.jellyfish.name)}？`,
@@ -863,7 +927,9 @@ function openFeedModal(food) {
 
       const levelUps = addExp(save, food.exp);
       persist();
+      trackEvent("feed_complete", { itemId: food.id, quantity: result.quantity, exp: food.exp, source: "inventory" });
       trackEvent("feed_jellyfish", { itemId: food.id });
+      trackFirstMeaningfulInteraction(save.player.createdAt, { source: "inventory_feed" });
       renderApp();
       animateAvatar("is-feeding");
       showToast(`🍰 EXP +${food.exp}`, "success");
@@ -914,11 +980,14 @@ function handleEquip(itemId, type) {
         return;
       }
 
+      recordCompanionProgress("outfit", "unequip_accessory");
       persist();
       renderApp();
       animateAvatar("is-chatting");
       showToast(`已卸下 ${item?.name || "配件"}`, "success");
       trackEvent("unequip_accessory", { itemId });
+      trackEvent("outfit_change", { itemId, type, equipped: false });
+      trackFirstMeaningfulInteraction(save.player.createdAt, { source: "unequip_accessory" });
       return;
     }
 
@@ -929,12 +998,15 @@ function handleEquip(itemId, type) {
       return;
     }
 
+    const companionResult = recordCompanionProgress("outfit", "equip_accessory");
     persist();
     renderApp();
     animateAvatar("is-chatting");
 
-    showToast(`已裝備 ${item?.name || "配件"}，可在養成區自由移動`, "success");
+    showToast(`已裝備 ${item?.name || "配件"}，可在養成區自由移動${companionRewardMessage(companionResult)}`, "success");
     trackEvent("equip_accessory", { itemId, equippedCount: getEquippedAccessories(save).length });
+    trackEvent("outfit_change", { itemId, type, equipped: true });
+    trackFirstMeaningfulInteraction(save.player.createdAt, { source: "equip_accessory" });
     return;
   }
 
@@ -947,11 +1019,14 @@ function handleEquip(itemId, type) {
     return;
   }
 
+  const companionResult = recordCompanionProgress("outfit", `equip_${type}`);
   persist();
   renderApp();
   animateAvatar("is-chatting");
-  showToast(`已裝備 ${item?.name || "新物品"}`, "success");
+  showToast(`已裝備 ${item?.name || "新物品"}${companionRewardMessage(companionResult)}`, "success");
   trackEvent(type === "skin" ? "equip_skin" : `equip_${type}`, { itemId });
+  trackEvent("outfit_change", { itemId, type, equipped: true });
+  trackFirstMeaningfulInteraction(save.player.createdAt, { source: `equip_${type}` });
 }
 
 function handleResetSave() {
@@ -965,7 +1040,7 @@ function handleResetSave() {
       save = null;
       battleState = null;
       battleActionSelection = null;
-      accessoryDrag = null;
+      accessoryGesture = null;
       accessoryEditMode = false;
       closeQuickFeedPanel();
       quickFeedActionLocked = false;
@@ -989,7 +1064,48 @@ function updateShopQuantity(itemId, nextQuantity) {
 
   const current = shopQuantities[itemId] || QUANTITY_CONFIG.default;
   shopQuantities[itemId] = normalizeQuantity(nextQuantity, current);
-  renderApp();
+  updateShopQuantityDom(itemId);
+}
+
+function updateShopQuantityDom(itemId) {
+  if (!save) return;
+
+  const item = findItem(itemId);
+  const card = document.querySelector(`.shop-card[data-item-id="${itemId}"]`);
+  if (!item || !card) {
+    renderApp();
+    return;
+  }
+
+  const quantity = normalizeQuantity(shopQuantities[itemId] || QUANTITY_CONFIG.default);
+  const input = card.querySelector(`[data-action="shop-quantity-input"][data-item-id="${itemId}"]`);
+  const total = item.price * quantity;
+  const totalElement = card.querySelector("[data-quantity-total]");
+  const warning = card.querySelector("[data-quantity-warning]");
+  const purchaseButton = card.querySelector("[data-quantity-action]");
+  const maxButton = card.querySelector('[data-action="shop-quantity-max"]');
+  const status = getItemStatus(save, item);
+  const canPurchase = status.kind === "available" && total <= save.player.points;
+  const affordableMax = item.price > 0 ? Math.floor(Math.max(0, save.player.points) / item.price) : QUANTITY_CONFIG.max;
+
+  if (input) input.value = String(quantity);
+  if (totalElement) totalElement.textContent = `✦ ${formatNumber(total)}`;
+  if (warning) {
+    warning.hidden = total <= save.player.points;
+    warning.textContent = total > save.player.points ? `還差 ${formatNumber(total - save.player.points)} 點` : "";
+  }
+  if (purchaseButton) {
+    const actionKind = canPurchase ? "available" : total > save.player.points ? "insufficient" : status.kind;
+    purchaseButton.classList.remove("available", "insufficient", "owned", "equipped", "locked", "is-static");
+    purchaseButton.classList.add(actionKind);
+    if (status.kind === "locked" || status.kind === "owned" || status.kind === "equipped") {
+      purchaseButton.classList.add("is-static");
+    }
+    purchaseButton.dataset.quantity = String(quantity);
+    purchaseButton.disabled = !canPurchase;
+    purchaseButton.textContent = canPurchase ? item.price === 0 ? "免費取得" : `購買 ×${quantity}` : total > save.player.points ? `還差 ${formatNumber(total - save.player.points)} 點` : status.label;
+  }
+  if (maxButton) maxButton.disabled = affordableMax < 1;
 }
 
 function openBattleActionPanel(itemId) {
@@ -1030,7 +1146,44 @@ function updateBattleActionQuantity(itemId, nextQuantity) {
 
   const current = battleActionSelection.quantity || QUANTITY_CONFIG.default;
   battleActionSelection.quantity = Math.min(limits.max, normalizeQuantity(nextQuantity, current));
-  renderApp();
+  updateBattleActionDom(itemId);
+}
+
+function updateBattleActionDom(itemId) {
+  if (!save || !battleState || !battleActionSelection || battleActionSelection.itemId !== itemId) return;
+
+  const item = BATTLE_SHOP_ITEMS.find((candidate) => candidate.id === itemId);
+  const card = document.querySelector(`.battle-action-item[data-item-id="${itemId}"]`);
+  if (!item || !card) {
+    renderApp();
+    return;
+  }
+
+  const limits = getBattleActionQuantityLimits(battleState, save, item);
+  if (limits.max <= 0) {
+    battleActionSelection = null;
+    renderApp();
+    return;
+  }
+
+  const quantity = item.type === "weapon" ? 1 : Math.min(limits.max, normalizeQuantity(battleActionSelection.quantity));
+  battleActionSelection.quantity = quantity;
+  const input = card.querySelector(`[data-action="battle-quantity-input"][data-item-id="${itemId}"]`);
+  const metaValue = card.querySelector(".battle-action-panel-meta strong");
+  const confirmButton = card.querySelector(".battle-confirm-button");
+  if (input) input.value = String(quantity);
+  if (metaValue) {
+    const expectedValue = item.type === "weapon"
+      ? item.damage
+      : item.type === "recovery"
+        ? Math.min(Math.max(0, battleState.player.maxHp - battleState.player.hp), item.heal * quantity)
+        : 0;
+    metaValue.textContent = item.type === "weapon" ? `預計 Damage：${expectedValue}` : item.type === "recovery" ? `預計回血：+${expectedValue} HP` : "狀態解除";
+  }
+  if (confirmButton) {
+    confirmButton.dataset.quantity = String(quantity);
+    confirmButton.textContent = `使用 ${item.name} ×${quantity}`;
+  }
 }
 
 function continueToColorSelection(event) {
@@ -1078,12 +1231,12 @@ function handleAction(actionTarget) {
   switch (action) {
     case "view": {
       const nextView = viewIds.includes(actionTarget.dataset.view) ? actionTarget.dataset.view : "home";
-      leaveBattleIfNeeded(nextView);
+      if (!leaveBattleIfNeeded(nextView)) return;
       if (nextView !== "home") accessoryEditMode = false;
       if (nextView !== "home") closeQuickFeedPanel();
       if (nextView === "shop") shopCategory = "battle";
       currentView = nextView;
-      trackEvent(currentView === "challenge" ? "boss_challenge_open" : `${currentView === "home" ? "game_open" : `${currentView}_open`}`);
+      trackEvent(currentView === "challenge" ? "boss_challenge_open" : `${currentView}_open`);
       renderApp();
       break;
     }
@@ -1094,11 +1247,13 @@ function handleAction(actionTarget) {
         showToast(result.reason || "今天的摸摸次數已用完。", "warning");
         return;
       }
+      const companionResult = recordCompanionProgress("pet", "pet");
       persist();
       renderApp();
       animateAvatar("is-petting");
-      showToast(`♡ 親密度 +${result.gained}`, "success");
+      showToast(`♡ 親密度 +${result.gained}${companionRewardMessage(companionResult)}`, "success");
       trackEvent("pet_jellyfish");
+      trackFirstMeaningfulInteraction(save.player.createdAt, { source: "pet" });
       break;
     }
     case "chat": {
@@ -1109,11 +1264,13 @@ function handleAction(actionTarget) {
         return;
       }
       const line = CHAT_LINES[Math.floor(Math.random() * CHAT_LINES.length)];
+      const companionResult = recordCompanionProgress("chat", "chat");
       persist();
       renderApp();
       animateAvatar("is-chatting");
-      showToast(`「${line}」 · 親密度 +${result.gained}`, "success");
+      showToast(`「${line}」 · 親密度 +${result.gained}${companionRewardMessage(companionResult)}`, "success");
       trackEvent("chat_jellyfish");
+      trackFirstMeaningfulInteraction(save.player.createdAt, { source: "chat" });
       break;
     }
     case "quick-feed":
@@ -1142,8 +1299,8 @@ function handleAction(actionTarget) {
       handleQuickFeedSubmit();
       break;
     case "quick-feed-to-shop":
+      if (!leaveBattleIfNeeded("shop")) return;
       closeQuickFeedPanel();
-      leaveBattleIfNeeded("shop");
       accessoryEditMode = false;
       currentView = "shop";
       shopCategory = "food";
@@ -1151,7 +1308,7 @@ function handleAction(actionTarget) {
       trackEvent("shop_open", { category: "food", source: "quick_feed" });
       break;
     case "go-inventory":
-      leaveBattleIfNeeded("inventory");
+      if (!leaveBattleIfNeeded("inventory")) return;
       closeQuickFeedPanel();
       accessoryEditMode = false;
       currentView = "inventory";
@@ -1159,7 +1316,7 @@ function handleAction(actionTarget) {
       renderApp();
       break;
     case "go-shop":
-      leaveBattleIfNeeded("shop");
+      if (!leaveBattleIfNeeded("shop")) return;
       closeQuickFeedPanel();
       accessoryEditMode = false;
       currentView = "shop";
@@ -1168,7 +1325,7 @@ function handleAction(actionTarget) {
       trackEvent("shop_open");
       break;
     case "go-battle-shop":
-      leaveBattleIfNeeded("shop");
+      if (!leaveBattleIfNeeded("shop")) return;
       closeQuickFeedPanel();
       accessoryEditMode = false;
       currentView = "shop";
@@ -1184,7 +1341,7 @@ function handleAction(actionTarget) {
       trackEvent("boss_challenge_open");
       break;
     case "go-accessory-shop":
-      leaveBattleIfNeeded("shop");
+      if (!leaveBattleIfNeeded("shop")) return;
       closeQuickFeedPanel();
       accessoryEditMode = false;
       currentView = "shop";
@@ -1193,7 +1350,7 @@ function handleAction(actionTarget) {
       trackEvent("shop_open", { category: "accessory" });
       break;
     case "go-home-accessory-editor":
-      leaveBattleIfNeeded("home");
+      if (!leaveBattleIfNeeded("home")) return;
       closeQuickFeedPanel();
       currentView = "home";
       accessoryEditMode = true;
@@ -1299,8 +1456,17 @@ function handleAction(actionTarget) {
       handleBattleAction(actionTarget, normalizeQuantity(actionTarget.dataset.quantity));
       break;
     case "battle-exit":
-      finishBattle("challenge");
-      showToast("本次挑戰已結束。", "info");
+      openConfirm({
+        title: "要離開這場戰鬥嗎？",
+        body: "離開戰鬥將失去本次戰鬥進度，已使用的道具不會恢復。",
+        confirmLabel: "離開戰鬥",
+        tone: "button-danger",
+        onConfirm: () => {
+          trackEvent("battle_end", { bossId: battleState?.boss?.id, outcome: "abandoned", destination: "home" });
+          finishBattle("home");
+          showToast("本次挑戰已結束。", "info");
+        }
+      });
       break;
     case "battle-retry":
       startBattle();
@@ -1441,13 +1607,39 @@ function boot() {
     if (error) error.textContent = "";
   });
 
-  window.addEventListener("beforeunload", persist);
+  window.addEventListener("beforeunload", (event) => {
+    if (battleState && !["won", "lost"].includes(battleState.phase)) {
+      event.preventDefault();
+      event.returnValue = "";
+    }
+    persist();
+  });
   window.addEventListener("resize", scheduleAccessoryToolbarPosition);
+  window.addEventListener("jellylab:save-failure", () => {
+    showToast("目前無法保存遊戲進度，請先不要關閉頁面。", "warning");
+    trackEvent("save_failure");
+  });
+  window.addEventListener("jellylab:save-recovery", () => {
+    showToast("已從上一份保存資料恢復遊戲進度。", "info");
+    trackEvent("save_recovery", { source: "backup" });
+  });
   window.addEventListener("keydown", (event) => {
     if (event.key === "Escape") closeModal();
   });
 
+  const saveNotices = Array.isArray(window.__jellyLabSaveNotices) ? window.__jellyLabSaveNotices.splice(0) : [];
+  startSession();
   renderApp();
+  saveNotices.forEach((notice) => {
+    if (notice.eventName === "save-failure") {
+      showToast("目前無法保存遊戲進度，請先不要關閉頁面。", "warning");
+      trackEvent("save_failure", notice.detail);
+    }
+    if (notice.eventName === "save-recovery") {
+      showToast("已從上一份保存資料恢復遊戲進度。", "info");
+      trackEvent("save_recovery", notice.detail);
+    }
+  });
   if (save) trackEvent("game_open");
 }
 

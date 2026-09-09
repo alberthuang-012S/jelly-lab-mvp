@@ -1,7 +1,10 @@
 export const GAME_CONFIG = {
-  version: 6,
+  productVersion: "2.18.0",
+  version: 7,
   saveKey: "jellyLabSave",
-  startingPoints: 50000,
+  backupSaveKey: "jellyLabSaveBackup",
+  corruptedSaveKey: "jellyLabSaveCorrupted",
+  startingPoints: 50000, // TEST ONLY：正式活動前不代表可兌換價值。
   maxLevel: 10,
   dailyIntimacyLimit: 10,
   petDailyLimit: 3,
@@ -11,8 +14,26 @@ export const GAME_CONFIG = {
   initialBaseColor: "yellow",
   initialSkin: "normal",
   initialScene: "default",
-  pointsPer100Dollar: 10
+  pointsPer100Dollar: 10,
+  dailyCompanionRewardPoints: 100,
+  weeklyCompanionRewardPoints: 300,
+  weeklyCompanionTargetDays: 4
 };
+
+export const COMPANION_GOALS = [
+  {
+    id: "pet",
+    action: "pet",
+    label: "摸摸水母 1 次",
+    description: "給今天的夥伴一個溫柔的摸摸。"
+  },
+  {
+    id: "chat",
+    action: "chat",
+    label: "和水母聊天 1 次",
+    description: "聽聽水母今天想和你分享什麼。"
+  }
+];
 
 export const LEVEL_CONFIG = {
   baseExp: 100,

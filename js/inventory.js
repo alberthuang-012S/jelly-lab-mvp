@@ -1,5 +1,5 @@
-import { ACCESSORIES, BATTLE_SHOP_ITEMS, FOODS, SCENES, SKINS } from "./config.js?v=2.17.0";
-import { consumeFood, getBattleItemQuantity, getFoodQuantity } from "./state.js?v=2.17.0";
+import { ACCESSORIES, BATTLE_SHOP_ITEMS, FOODS, GAME_CONFIG, SCENES, SKINS } from "./config.js?v=2.18.0";
+import { consumeFood, getBattleItemQuantity, getFoodQuantity } from "./state.js?v=2.18.0";
 
 export function getInventoryItems(save, category) {
   if (category === "food") {
@@ -41,6 +41,10 @@ export function feedFood(save, food, quantity = 1) {
 
   if (!food || amount < 1) {
     return { ok: false, reason: "請選擇要餵食的食物。" };
+  }
+
+  if (save?.jellyfish?.level >= GAME_CONFIG.maxLevel) {
+    return { ok: false, maxLevel: true, reason: "水母已達最高等級，不能再餵食 EXP 食物。" };
   }
 
   const available = getFoodQuantity(save, food.id);

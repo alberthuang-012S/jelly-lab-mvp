@@ -2,6 +2,7 @@ import {
   ACCESSORIES,
   ACCESSORY_LAYOUT_CONFIG,
   BATTLE_SHOP_ITEMS,
+  COMPANION_GOALS,
   EVOLUTION_STAGES,
   FOODS,
   GAME_CONFIG,
@@ -10,7 +11,7 @@ import {
   REWARDS_CONFIG,
   SCENES,
   SKINS
-} from "./config.js?v=2.17.0";
+} from "./config.js?v=2.18.0";
 
 function integerOr(value, fallback = 0) {
   const number = Number(value);
@@ -122,12 +123,89 @@ function normalizeCoupons(sourceCoupons) {
   return coupons;
 }
 
-export function getToday() {
-  const now = new Date();
+export function getToday(now = new Date()) {
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, "0");
   const day = String(now.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+export function getWeekKey(now = new Date()) {
+  const date = new Date(now);
+  date.setHours(0, 0, 0, 0);
+  const day = date.getDay();
+  const daysFromMonday = (day + 6) % 7;
+  date.setDate(date.getDate() - daysFromMonday);
+  return getToday(date);
+}
+
+function getCompanionGoalForDate(date = getToday()) {
+  const dateText = String(date);
+  const seed = [...dateText].reduce((sum, character) => sum + character.charCodeAt(0), 0);
+  return COMPANION_GOALS[seed % COMPANION_GOALS.length] || COMPANION_GOALS[0];
+}
+
+function isCompanionActionCompleted(save, action) {
+  if (action === "pet") return save.daily.petCount > 0;
+  if (action === "chat") return save.daily.chatCount > 0;
+  return false;
+}
+
+function resetDailyCompanion(save, today) {
+  const goal = getCompanionGoalForDate(today);
+  save.daily.companionGoalDate = today;
+  save.daily.companionGoalId = goal.id;
+  save.daily.companionCompleted = false;
+  save.daily.companionRewardClaimed = false;
+}
+
+function resetWeeklyCompanion(save, weekKey) {
+  save.weekly.weekKey = weekKey;
+  save.weekly.completedDates = [];
+  save.weekly.rewardClaimed = false;
+}
+
+function markCompanionComplete(save, today) {
+  if (!save?.daily || save.daily.companionCompleted) {
+    return { completed: false, alreadyCompleted: true, dailyRewardPoints: 0, weeklyRewardPoints: 0 };
+  }
+
+  const goal = COMPANION_GOALS.find((candidate) => candidate.id === save.daily.companionGoalId) || COMPANION_GOALS[0];
+  if (!isCompanionActionCompleted(save, goal.action)) {
+    return { completed: false, alreadyCompleted: false, dailyRewardPoints: 0, weeklyRewardPoints: 0 };
+  }
+
+  save.daily.companionCompleted = true;
+  let dailyRewardPoints = 0;
+  if (!save.daily.companionRewardClaimed) {
+    dailyRewardPoints = GAME_CONFIG.dailyCompanionRewardPoints;
+    addPoints(save, dailyRewardPoints);
+    save.daily.companionRewardClaimed = true;
+  }
+
+  if (!Array.isArray(save.weekly.completedDates)) {
+    save.weekly.completedDates = [];
+  }
+  if (!save.weekly.completedDates.includes(today)) {
+    save.weekly.completedDates.push(today);
+  }
+
+  let weeklyRewardPoints = 0;
+  if (save.weekly.completedDates.length >= GAME_CONFIG.weeklyCompanionTargetDays && !save.weekly.rewardClaimed) {
+    weeklyRewardPoints = GAME_CONFIG.weeklyCompanionRewardPoints;
+    addPoints(save, weeklyRewardPoints);
+    save.weekly.rewardClaimed = true;
+  }
+
+  return {
+    completed: true,
+    alreadyCompleted: false,
+    goal,
+    dailyRewardPoints,
+    weeklyRewardPoints,
+    weeklyProgress: Math.min(GAME_CONFIG.weeklyCompanionTargetDays, save.weekly.completedDates.length),
+    weeklyCompleted: save.weekly.rewardClaimed
+  };
 }
 
 export function getExpRequired(level) {
@@ -163,7 +241,16 @@ export function createDefaultSave(name, baseColor = GAME_CONFIG.initialBaseColor
       date: today,
       intimacyEarned: 0,
       petCount: 0,
-      chatCount: 0
+      chatCount: 0,
+      companionGoalDate: today,
+      companionGoalId: getCompanionGoalForDate(today).id,
+      companionCompleted: false,
+      companionRewardClaimed: false
+    },
+    weekly: {
+      weekKey: getWeekKey(),
+      completedDates: [],
+      rewardClaimed: false
     },
     inventory: {
       foods: {},
@@ -193,6 +280,7 @@ export function normalizeSave(raw) {
   const sourcePlayer = source.player && typeof source.player === "object" ? source.player : {};
   const sourceJellyfish = source.jellyfish && typeof source.jellyfish === "object" ? source.jellyfish : {};
   const sourceDaily = source.daily && typeof source.daily === "object" ? source.daily : {};
+  const sourceWeekly = source.weekly && typeof source.weekly === "object" ? source.weekly : {};
   const sourceInventory = source.inventory && typeof source.inventory === "object" ? source.inventory : {};
   const sourceCollection = source.collection && typeof source.collection === "object" ? source.collection : {};
   const sourceBossProgress = source.bossProgress && typeof source.bossProgress === "object" ? source.bossProgress : {};
@@ -244,6 +332,13 @@ export function normalizeSave(raw) {
   const equippedAccessories = normalizeEquippedAccessories(sourceEquippedAccessories, accessories);
   const accessoryPositions = normalizeAccessoryPositions(sourceJellyfish.accessoryPositions);
   const equippedScene = scenes.includes(sourceJellyfish.equippedScene) ? sourceJellyfish.equippedScene : GAME_CONFIG.initialScene;
+  const normalizedDailyDate = typeof sourceDaily.date === "string" ? sourceDaily.date : getToday();
+  const companionGoal = COMPANION_GOALS.some((goal) => goal.id === sourceDaily.companionGoalId)
+    ? sourceDaily.companionGoalId
+    : getCompanionGoalForDate(normalizedDailyDate).id;
+  const weeklyDates = Array.isArray(sourceWeekly.completedDates)
+    ? [...new Set(sourceWeekly.completedDates.filter((date) => /^\d{4}-\d{2}-\d{2}$/.test(String(date))).map(String))]
+    : [];
 
   return {
     version: GAME_CONFIG.version,
@@ -264,10 +359,19 @@ export function normalizeSave(raw) {
       equippedScene
     },
     daily: {
-      date: typeof sourceDaily.date === "string" ? sourceDaily.date : getToday(),
+      date: normalizedDailyDate,
       intimacyEarned: Math.min(GAME_CONFIG.dailyIntimacyLimit, nonNegativeInteger(sourceDaily.intimacyEarned)),
       petCount: Math.min(GAME_CONFIG.petDailyLimit, nonNegativeInteger(sourceDaily.petCount)),
-      chatCount: Math.min(GAME_CONFIG.chatDailyLimit, nonNegativeInteger(sourceDaily.chatCount))
+      chatCount: Math.min(GAME_CONFIG.chatDailyLimit, nonNegativeInteger(sourceDaily.chatCount)),
+      companionGoalDate: typeof sourceDaily.companionGoalDate === "string" ? sourceDaily.companionGoalDate : normalizedDailyDate,
+      companionGoalId: companionGoal,
+      companionCompleted: sourceDaily.companionCompleted === true,
+      companionRewardClaimed: sourceDaily.companionRewardClaimed === true
+    },
+    weekly: {
+      weekKey: typeof sourceWeekly.weekKey === "string" ? sourceWeekly.weekKey : getWeekKey(),
+      completedDates: weeklyDates,
+      rewardClaimed: sourceWeekly.rewardClaimed === true
     },
     inventory: {
       foods,
@@ -292,8 +396,9 @@ export function normalizeSave(raw) {
   };
 }
 
-export function applyDailyReset(save) {
-  const today = getToday();
+export function applyDailyReset(save, now = new Date()) {
+  const today = getToday(now);
+  const weekKey = getWeekKey(now);
   let didReset = false;
 
   if (save.daily.date !== today) {
@@ -301,6 +406,10 @@ export function applyDailyReset(save) {
     save.daily.intimacyEarned = 0;
     save.daily.petCount = 0;
     save.daily.chatCount = 0;
+    resetDailyCompanion(save, today);
+    didReset = true;
+  } else if (save.daily.companionGoalDate !== today || !COMPANION_GOALS.some((goal) => goal.id === save.daily.companionGoalId)) {
+    resetDailyCompanion(save, today);
     didReset = true;
   }
 
@@ -309,7 +418,65 @@ export function applyDailyReset(save) {
     didReset = true;
   }
 
+  if (!save.weekly || typeof save.weekly !== "object") {
+    save.weekly = { weekKey, completedDates: [], rewardClaimed: false };
+    didReset = true;
+  } else if (save.weekly.weekKey !== weekKey) {
+    resetWeeklyCompanion(save, weekKey);
+    didReset = true;
+  }
+
+  const companionResult = markCompanionComplete(save, today);
+  if (companionResult.completed) {
+    didReset = true;
+  }
+
   return didReset;
+}
+
+export function getDailyCompanionGoal(save) {
+  const goalId = save?.daily?.companionGoalId;
+  return COMPANION_GOALS.find((goal) => goal.id === goalId) || getCompanionGoalForDate(save?.daily?.date || getToday());
+}
+
+export function getWeeklyCompanionProgress(save) {
+  const completedDates = Array.isArray(save?.weekly?.completedDates) ? save.weekly.completedDates : [];
+  const completedDays = new Set(completedDates).size;
+  return {
+    completedDays: Math.min(GAME_CONFIG.weeklyCompanionTargetDays, completedDays),
+    targetDays: GAME_CONFIG.weeklyCompanionTargetDays,
+    completed: save?.weekly?.rewardClaimed === true || completedDays >= GAME_CONFIG.weeklyCompanionTargetDays,
+    rewardClaimed: save?.weekly?.rewardClaimed === true
+  };
+}
+
+export function completeDailyCompanion(save, action, now = new Date()) {
+  if (!save) {
+    return { completed: false, alreadyCompleted: false, dailyRewardPoints: 0, weeklyRewardPoints: 0 };
+  }
+
+  const wasCompleted = save.daily?.companionCompleted === true;
+  const hadWeeklyReward = save.weekly?.rewardClaimed === true;
+  applyDailyReset(save, now);
+  const goal = getDailyCompanionGoal(save);
+  if (goal.action !== action) {
+    return { completed: false, alreadyCompleted: save.daily.companionCompleted, goal, dailyRewardPoints: 0, weeklyRewardPoints: 0 };
+  }
+
+  const today = getToday(now);
+  if (!wasCompleted && save.daily.companionCompleted) {
+    return {
+      completed: true,
+      alreadyCompleted: false,
+      goal,
+      dailyRewardPoints: save.daily.companionRewardClaimed ? GAME_CONFIG.dailyCompanionRewardPoints : 0,
+      weeklyRewardPoints: !hadWeeklyReward && save.weekly.rewardClaimed ? GAME_CONFIG.weeklyCompanionRewardPoints : 0,
+      weeklyProgress: getWeeklyCompanionProgress(save).completedDays,
+      weeklyCompleted: save.weekly.rewardClaimed
+    };
+  }
+  const result = markCompanionComplete(save, today);
+  return { ...result, goal };
 }
 
 export function forceNextDay(save) {

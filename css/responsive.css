@@ -193,6 +193,18 @@
 }
 
 @media (max-width: 390px) {
+  .category-tabs {
+    flex-wrap: wrap;
+    row-gap: 6px;
+    overflow-x: visible;
+  }
+
+  .category-tab {
+    padding-right: 10px;
+    padding-left: 10px;
+    font-size: 0.7rem;
+  }
+
   .topbar {
     padding-right: 13px;
     padding-left: 13px;
@@ -278,7 +290,7 @@
   }
 
   .accessory-toolbar-actions {
-    grid-template-columns: repeat(3, 40px);
+    grid-template-columns: repeat(3, 49px);
   }
 
   .level-orb {

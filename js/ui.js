@@ -10,14 +10,14 @@ import {
   REWARDS_CONFIG,
   SHOP_CATEGORIES,
   SKINS
-} from "./config.js?v=2.17.0";
-import { getCollectionProgress, isCollected } from "./collection.js?v=2.17.0";
-import { getBattleInventorySummary, getInventoryItems, getRewardItems } from "./inventory.js?v=2.17.0";
-import { getBattleItemQuantity, getExpRequired, getFoodQuantity, getCurrentStage, getNextStage, getStageProgress, getEquippedAccessories } from "./state.js?v=2.17.0";
-import { renderAccessoryVisual, renderJellyfish, renderJellyfishPreview, getScene, getSkin } from "./jellyfish.js?v=2.17.0";
-import { getItemStatus, getShopItems, isEquipped, isRepeatableItem } from "./shop.js?v=2.17.0";
-import { getBattleActionQuantityLimits, getBossForDisplay } from "./battle.js?v=2.17.0";
-import { renderBattleItemVisual, renderFoodVisual } from "./components.js?v=2.17.0";
+} from "./config.js?v=2.18.0";
+import { getCollectionProgress, isCollected } from "./collection.js?v=2.18.0";
+import { getBattleInventorySummary, getInventoryItems, getRewardItems } from "./inventory.js?v=2.18.0";
+import { getBattleItemQuantity, getExpRequired, getFoodQuantity, getCurrentStage, getDailyCompanionGoal, getNextStage, getStageProgress, getEquippedAccessories, getWeeklyCompanionProgress } from "./state.js?v=2.18.0";
+import { renderAccessoryVisual, renderJellyfish, renderJellyfishPreview, getScene, getSkin } from "./jellyfish.js?v=2.18.0";
+import { getItemStatus, getShopItems, isEquipped, isRepeatableItem } from "./shop.js?v=2.18.0";
+import { getBattleActionQuantityLimits, getBossAttackPreview, getBossForDisplay } from "./battle.js?v=2.18.0";
+import { renderBattleItemVisual, renderFoodVisual } from "./components.js?v=2.18.0";
 
 export function escapeHtml(value) {
   return String(value)
@@ -92,6 +92,30 @@ function renderStageTrack(save) {
   `;
 }
 
+function renderCompanionCard(save) {
+  const goal = getDailyCompanionGoal(save);
+  const weekly = getWeeklyCompanionProgress(save);
+  const dailyDone = save.daily.companionCompleted === true;
+  const weeklyWidth = Math.min(100, (weekly.completedDays / weekly.targetDays) * 100);
+
+  return `
+    <article class="glass-card companion-card ${dailyDone ? "is-complete" : ""}">
+      <div class="companion-card-heading">
+        <div><span class="card-kicker">TODAY'S COMPANION</span><h2>今日陪伴</h2></div>
+        <span class="companion-status">${dailyDone ? "✓ 已完成" : "進行中"}</span>
+      </div>
+      <div class="companion-goal-row">
+        <span class="companion-goal-icon">${dailyDone ? "✦" : "♡"}</span>
+        <div><strong>${escapeHtml(goal.label)}</strong><small>${escapeHtml(goal.description)}</small></div>
+      </div>
+      <div class="companion-weekly-heading"><span>本週陪伴</span><strong>${weekly.completedDays} / ${weekly.targetDays} 天</strong></div>
+      <div class="companion-weekly-progress" role="progressbar" aria-label="本週陪伴進度" aria-valuenow="${weekly.completedDays}" aria-valuemin="0" aria-valuemax="${weekly.targetDays}"><span style="width:${weeklyWidth}%"></span></div>
+      <div class="companion-weekly-dots" aria-hidden="true">${Array.from({ length: weekly.targetDays }, (_, index) => `<span class="${index < weekly.completedDays ? "is-done" : ""}">${index < weekly.completedDays ? "●" : "○"}</span>`).join("")}</div>
+      <p class="companion-reward-note">${dailyDone ? `今日已獲得 ✦ ${formatNumber(GAME_CONFIG.dailyCompanionRewardPoints)} 點` : `完成可得 ✦ ${formatNumber(GAME_CONFIG.dailyCompanionRewardPoints)} 點`}${weekly.rewardClaimed ? ` · 本週獎勵已領取 ✦ ${formatNumber(GAME_CONFIG.weeklyCompanionRewardPoints)}` : ""}</p>
+    </article>
+  `;
+}
+
 function renderAccessoryLayoutControls(save, accessoryEditMode = false) {
   const equippedIds = getEquippedAccessories(save);
   const equippedCount = equippedIds.length;
@@ -131,6 +155,7 @@ export function renderQuickFeedPanel(save, options = {}) {
   const selectedStock = selectedFood ? getFoodQuantity(save, selectedFood.id) : 0;
   const selectedQuantity = selectedFood ? normalizeQuickFeedQuantity(options.quickFeedQuantity, selectedStock) : 0;
   const selectedExp = selectedFood ? selectedFood.exp * selectedQuantity : 0;
+  const isMaxLevel = save.jellyfish.level >= GAME_CONFIG.maxLevel;
 
   return `
     <div class="quick-feed-layer" role="dialog" aria-modal="true" aria-labelledby="quick-feed-title">
@@ -169,7 +194,7 @@ export function renderQuickFeedPanel(save, options = {}) {
               <span class="card-kicker">準備餵食</span>
               <strong id="quick-feed-selected-name">${escapeHtml(selectedFood.shortName)}</strong>
               <small id="quick-feed-selected-meta">單份 EXP +${formatNumber(selectedFood.exp)} · 剩餘 ×${formatNumber(selectedStock)}</small>
-              <b id="quick-feed-selected-total-exp">本次獲得 EXP +${formatNumber(selectedExp)}</b>
+              <b id="quick-feed-selected-total-exp">${isMaxLevel ? "已達最高等級，無法再獲得 EXP" : `本次獲得 EXP +${formatNumber(selectedExp)}`}</b>
             </div>
             <div class="quantity-control quick-feed-quantity-control" aria-label="餵食數量">
               <button type="button" class="quantity-step" data-action="quick-feed-quantity-decrease" data-food-id="${selectedFood.id}" aria-label="餵食數量減少">−</button>
@@ -177,8 +202,8 @@ export function renderQuickFeedPanel(save, options = {}) {
               <button type="button" class="quantity-step" data-action="quick-feed-quantity-increase" data-food-id="${selectedFood.id}" aria-label="餵食數量增加">＋</button>
             </div>
           </div>
-          <button id="quick-feed-submit" type="button" class="button-primary quick-feed-submit" data-action="quick-feed-submit" data-food-id="${selectedFood.id}" ${options.quickFeedActionLocked ? "disabled" : ""}>🍰 餵食 ${escapeHtml(selectedFood.shortName)} ×${selectedQuantity}</button>
-          <p class="quick-feed-note">餵食後會立即更新 EXP、等級與背包庫存。</p>
+          <button id="quick-feed-submit" type="button" class="button-primary quick-feed-submit" data-action="quick-feed-submit" data-food-id="${selectedFood.id}" ${(options.quickFeedActionLocked || isMaxLevel) ? "disabled" : ""}>${isMaxLevel ? "已達最高等級" : `🍰 餵食 ${escapeHtml(selectedFood.shortName)} ×${selectedQuantity}`}</button>
+          <p class="quick-feed-note">${isMaxLevel ? "水母已達最高等級，食物不會被消耗。" : "餵食後會立即更新 EXP、等級與背包庫存。"}</p>
         ` : `
           <div class="quick-feed-empty">
             <span class="quick-feed-empty-icon" aria-hidden="true">🍽️</span>
@@ -250,6 +275,7 @@ export function renderHome(container, save, options = {}) {
       </section>
 
       <section class="home-side">
+        ${renderCompanionCard(save)}
         <div class="stats-grid">
           <article class="stat-card level-stat">
             <span class="stat-icon">↗</span>
@@ -420,7 +446,7 @@ function renderShopCard(save, item, shopQuantities = {}) {
   const actionKind = canPurchase ? "available" : totalInsufficient && !isLocked && !isOwned ? "insufficient" : status.kind;
 
   return `
-    <article class="shop-card ${isLocked ? "is-locked" : ""} ${isOwned ? "is-owned" : ""} ${isBattleItem ? "is-battle-item" : ""}" style="--item-accent:${item.accent || "#69c6dc"}">
+    <article class="shop-card ${isLocked ? "is-locked" : ""} ${isOwned ? "is-owned" : ""} ${isBattleItem ? "is-battle-item" : ""}" data-item-id="${item.id}" style="--item-accent:${item.accent || "#69c6dc"}">
       ${renderShopVisual(save, item)}
       <div class="item-copy">
         <div class="item-title-row"><h3>${item.type === "food" ? "" : item.icon && !isBattleItem ? `${item.icon} ` : ""}${item.name}</h3>${status.kind === "equipped" ? "<span class=inline-check>✓</span>" : ""}</div>
@@ -431,12 +457,12 @@ function renderShopCard(save, item, shopQuantities = {}) {
           <div class="shop-quantity-section">
             <div class="quantity-heading"><span>數量</span><button type="button" class="max-quantity-button" data-action="shop-quantity-max" data-item-id="${item.id}" ${affordableMax < 1 ? "disabled" : ""}>MAX</button></div>
             ${renderQuantitySelector({ quantity, max: QUANTITY_CONFIG.max, itemId: item.id, decreaseAction: "shop-quantity-decrease", increaseAction: "shop-quantity-increase", inputAction: "shop-quantity-input" })}
-            <div class="quantity-total"><span>總價</span><strong>✦ ${formatNumber(totalPrice)}</strong></div>
-            ${totalInsufficient ? `<small class="quantity-warning">還差 ${formatNumber(totalPrice - save.player.points)} 點</small>` : ""}
+            <div class="quantity-total"><span>總價</span><strong data-quantity-total>✦ ${formatNumber(totalPrice)}</strong></div>
+            <small class="quantity-warning" data-quantity-warning ${totalInsufficient ? "" : "hidden"}>${totalInsufficient ? `還差 ${formatNumber(totalPrice - save.player.points)} 點` : ""}</small>
           </div>
         ` : ""}
       </div>
-      <button class="item-action ${actionKind} ${isLocked || isOwned ? "is-static" : ""}" data-action="purchase" data-id="${item.id}" data-quantity="${quantity}" ${!canPurchase ? "disabled" : ""}>
+      <button class="item-action ${actionKind} ${isLocked || isOwned ? "is-static" : ""}" data-action="purchase" data-id="${item.id}" data-quantity="${quantity}" data-quantity-action ${!canPurchase ? "disabled" : ""}>
         ${isLocked ? `🔒 LV${requiredLevel} 解鎖` : actionLabel}
       </button>
     </article>
@@ -499,9 +525,10 @@ function renderInventoryVisual(save, item, category) {
 function renderInventoryCard(save, item, category) {
   const quantity = category === "food" ? getFoodQuantity(save, item.id) : category === "battle" ? getBattleItemQuantity(save, item) : null;
   const equipped = isEquipped(save, item);
+  const maxLevel = category === "food" && save.jellyfish.level >= GAME_CONFIG.maxLevel;
   const isAccessory = category === "accessory";
   const action = category === "food" ? "feed" : category === "battle" ? "go-challenge" : category === "skin" ? "equip-skin" : category === "accessory" ? "equip-accessory" : "equip-scene";
-  const buttonLabel = category === "food" ? "餵食" : category === "battle" ? "前往挑戰" : isAccessory ? equipped ? "卸下" : "裝備" : equipped ? "使用中" : "裝備";
+  const buttonLabel = category === "food" ? maxLevel ? "已達 MAX" : "餵食" : category === "battle" ? "前往挑戰" : isAccessory ? equipped ? "卸下" : "裝備" : equipped ? "使用中" : "裝備";
   const itemDescription = category === "food"
     ? `EXP +${item.exp} · ${item.description}`
     : category === "battle"
@@ -514,7 +541,7 @@ function renderInventoryCard(save, item, category) {
       <div class="inventory-copy"><h3>${category === "food" || category === "skin" || category === "scene" || category === "battle" ? "" : item.icon ? `${item.icon} ` : ""}${item.name}</h3><p>${itemDescription}</p></div>
       <div class="inventory-actions">
         ${category === "food" || category === "battle" ? `<span class="quantity-badge">×${quantity}</span>` : equipped ? `<span class="equipped-label">${isAccessory ? "✓ 已裝備" : "✓ 使用中"}</span>` : ""}
-        <button class="small-action ${equipped ? "is-selected" : ""}" data-action="${action}" data-id="${item.id}" ${equipped && !isAccessory ? "disabled" : ""}>${buttonLabel}</button>
+        <button class="small-action ${equipped ? "is-selected" : ""}" data-action="${action}" data-id="${item.id}" ${(equipped && !isAccessory) || maxLevel ? "disabled" : ""}>${buttonLabel}</button>
       </div>
     </article>
   `;
@@ -633,7 +660,7 @@ function renderBattleActionItem(save, battle, item, canAct, battleActionSelectio
   const highlight = (isRecovery && battle.player.status.blurred) || (isOintment && battle.player.status.itchy);
   const detail = isWeapon ? `${item.damage} Damage` : isRecovery ? `HP +${item.heal} · 解模糊` : "乳霜 · 解除癢";
   const isSelected = canAct && battleActionSelection?.itemId === item.id && limits.max > 0;
-  const selectedQuantity = isSelected ? Math.min(limits.max, normalizeUiQuantity(battleActionSelection.quantity)) : 1;
+  const selectedQuantity = isSelected ? (isWeapon ? 1 : Math.min(limits.max, normalizeUiQuantity(battleActionSelection.quantity))) : 1;
   const expectedValue = isWeapon
     ? item.damage * selectedQuantity
     : isRecovery
@@ -641,7 +668,7 @@ function renderBattleActionItem(save, battle, item, canAct, battleActionSelectio
       : 0;
 
   return `
-    <article class="battle-action-item ${highlight ? "is-recommended" : ""} ${quantity <= 0 ? "is-empty" : ""} ${isSelected ? "is-open" : ""}">
+    <article class="battle-action-item ${highlight ? "is-recommended" : ""} ${quantity <= 0 ? "is-empty" : ""} ${isSelected ? "is-open" : ""}" data-item-id="${item.id}">
       <div class="battle-item-icon battle-${item.category}">${renderBattleItemVisual(item, { compact: true })}</div>
       <div class="battle-item-copy"><strong>${item.name} ×${quantity}</strong><span>${detail}</span></div>
       <button class="battle-use-button" data-action="battle-open-action" data-battle-action="${item.id}" ${disabled ? "disabled" : ""}>${statusHint}</button>
@@ -649,7 +676,7 @@ function renderBattleActionItem(save, battle, item, canAct, battleActionSelectio
         <div class="battle-action-panel">
           <div class="battle-action-panel-heading"><strong>使用 ${item.name}</strong><span>庫存 ×${quantity}</span></div>
           <div class="battle-action-panel-meta"><span>${isWeapon ? `單顆 Damage：${item.damage}` : isRecovery ? `每罐 HP +${item.heal}` : "乳霜 · 固定使用 1 個"}</span><strong>${isWeapon ? `預計 Damage：${expectedValue}` : isRecovery ? `預計回血：+${expectedValue} HP` : "狀態解除"}</strong></div>
-          ${isOintment ? `<div class="battle-single-quantity">使用數量：<strong>1</strong></div>` : renderQuantitySelector({ quantity: selectedQuantity, max: limits.max, itemId: item.id, decreaseAction: "battle-quantity-decrease", increaseAction: "battle-quantity-increase", inputAction: "battle-quantity-input", label: "戰鬥使用數量" })}
+          ${isOintment || isWeapon ? `<div class="battle-single-quantity">每個行動最多使用：<strong>1</strong></div>` : renderQuantitySelector({ quantity: selectedQuantity, max: limits.max, itemId: item.id, decreaseAction: "battle-quantity-decrease", increaseAction: "battle-quantity-increase", inputAction: "battle-quantity-input", label: "戰鬥使用數量" })}
           <div class="battle-action-panel-actions"><button type="button" class="battle-cancel-button" data-action="battle-cancel-action">取消</button><button type="button" class="battle-confirm-button" data-action="battle-confirm-action" data-battle-action="${item.id}" data-quantity="${selectedQuantity}">使用 ${item.name} ×${selectedQuantity}</button></div>
         </div>
       ` : ""}
@@ -688,6 +715,7 @@ function renderBattleStatus(battle) {
 
 function renderBattleScene(save, battle, battleActionSelection) {
   const boss = getBossForDisplay(battle.bossId);
+  const bossAttackPreview = getBossAttackPreview(battle);
   const canAct = battle.phase === "player" && !battle.actionLocked;
   const phaseLabel = battle.phase === "boss" ? "老化怪獸回合" : battle.actionLocked ? "行動處理中…" : battle.phase === "won" ? "挑戰成功" : battle.phase === "lost" ? "挑戰失敗" : "你的回合";
   const bossAnimation = ["capsule-fly", "player-bump", "boss-defeated"].includes(battle.lastAnimation) ? "is-hurt" : "";
@@ -725,6 +753,7 @@ function renderBattleScene(save, battle, battleActionSelection) {
       </div>
 
       ${renderBattleStatus(battle)}
+      ${bossAttackPreview ? `<p class="boss-telegraph" role="status">⚠ 老化怪獸正在準備：${bossAttackPreview.icon} ${bossAttackPreview.name}</p>` : ""}
 
       <div class="battle-columns">
         <section class="battle-actions-card glass-card">
@@ -869,6 +898,22 @@ export function showLevelUpModal(save, fromLevel, toLevel, onClose) {
   });
 }
 
+export function showLevelUpSummaryModal(save, levelUps = [], onClose) {
+  if (!levelUps.length) return;
+
+  const fromLevel = levelUps[0].from;
+  const toLevel = levelUps[levelUps.length - 1].to;
+  const reachedStage = getCurrentStage(save);
+  const levelList = levelUps.map((levelUp) => `LV.${levelUp.to}`).join("、");
+  openModal({
+    eyebrow: "JELLY LAB · GROWTH LOG",
+    title: "✨ 成長紀錄 ✨",
+    className: "level-up-modal level-up-summary-modal",
+    body: `<div class="level-up-number"><span>LV.${fromLevel}</span><b>→</b><strong>LV.${toLevel}</strong></div><p>${escapeHtml(save.jellyfish.name)} 一次完成了 ${levelUps.length} 次成長。</p><div class="level-up-summary-list"><span>本次抵達</span><strong>${levelList}</strong><span>目前階段</span><strong>${escapeHtml(reachedStage.name)}</strong></div><div class="level-up-stars">✦　✧　✦　✧　✦</div>`,
+    actions: [{ label: "太好了！", className: "button-primary", onClick: onClose }]
+  });
+}
+
 export function showPurchaseSuccess(item, onEquip, quantity = 1) {
   const canEquip = ["skin", "accessory", "scene"].includes(item.type);
   const quantityLabel = quantity > 1 || isRepeatableItem(item) ? ` ×${quantity}` : "";
@@ -924,7 +969,7 @@ export function renderDebugPanel(container, visible, save, battle = null, collap
   const battleDebugDisabled = !battle || battle.actionLocked || !["player", "boss"].includes(battle.phase);
 
   container.innerHTML = `
-    <div class="debug-header"><span>DEBUG MODE</span><button data-action="toggle-debug" aria-label="${collapsed ? "展開 Debug" : "收合 Debug"}">${collapsed ? "+" : "−"}</button></div>
+    <div class="debug-header"><span>DEBUG MODE · V${GAME_CONFIG.productVersion}</span><button data-action="toggle-debug" aria-label="${collapsed ? "展開 Debug" : "收合 Debug"}">${collapsed ? "+" : "−"}</button></div>
     <div class="debug-body">
       <p>只在網址含 <code>?debug=1</code> 時顯示</p>
       <div class="debug-group"><span>POINTS</span><div><button data-action="debug-points" data-amount="100">+100</button><button data-action="debug-points" data-amount="500">+500</button><button data-action="debug-points" data-amount="1000">+1000</button></div></div>

@@ -1,8 +1,8 @@
-# 水母養成所 Jelly Lab V2.17.0
+# 水母養成所 Jelly Lab V2.18.0
 
-Jelly Lab V2.17.0 保留既有水母養成、戰鬥與自由配件配置，將首頁「餵食」改為可直接操作的快速餵食面板：選擇已有食物、調整份數後一次完成批量餵食，立即更新 EXP、等級與庫存。原本背包的單份餵食確認流程仍保留；專案仍使用 HTML5、CSS3、Vanilla JavaScript 與 `localStorage`，不需要後端、帳號或 npm 依賴即可遊玩。
+Jelly Lab V2.18.0 在既有水母養成、戰鬥、快速餵食與自由配件配置上，加入「今日陪伴」與本週累積回訪循環，並補強 Save 安全、LV10 餵食防呆、Battle 提示、手機操作與事件追蹤。專案仍使用 HTML5、CSS3、Vanilla JavaScript 與 `localStorage`，不需要後端、帳號或 npm 依賴即可遊玩；目前 50,000 點起始值只供內部測試。
 
-V2.17.0 新增預渲染 3D 公仔素材層：角色會優先尋找 `assets/jellyfish-3d/` 的透明 WebP，並在素材不存在時回退至既有 PNG；Save 結構、養成、商店、戰鬥、背包、場景與配件拖曳資料均維持相容。
+V2.17.0 的預渲染 3D 公仔素材層在本版改為真正的透明 WebP 檔案，角色會優先尋找 `assets/jellyfish-3d/`，素材失敗時回退至既有 PNG；Save 結構、養成、商店、戰鬥、背包、場景與配件拖曳資料均維持相容。
 
 ## 啟動方式
 
@@ -43,10 +43,11 @@ https://<GitHub帳號>.github.io/<repository名稱>/?debug=1
 ├─ 水母圖.jpg                 # 提供的原始 4×2 水母素材圖
 ├─ assets/
 │  ├─ jellyfish/              # 8 張透明水母 PNG
-│  ├─ jellyfish-3d/           # 預渲染 3D 公仔 WebP 與命名規則
+│  ├─ jellyfish-3d/           # 預渲染 3D 公仔透明 WebP 與命名規則
 │  └─ items/
 │     └─ ppa-plus-one.png     # 使用者提供的 PPA+1 乳霜按壓瓶素材
 ├─ tools/slice_jellyfish.py   # 重建水母透明素材的切圖工具
+├─ tools/v2-18-regression.mjs # V2.18 核心流程與素材回歸檢查
 ├─ css/
 │  ├─ main.css                # 既有基礎樣式與元件
 │  ├─ animations.css          # 既有養成動畫
@@ -57,7 +58,7 @@ https://<GitHub帳號>.github.io/<repository名稱>/?debug=1
    ├─ app.js                  # 應用入口、事件路由、畫面切換與 Battle orchestration
    ├─ config.js               # 商品、等級、進化、Boss、攻擊、戰鬥商品與獎勵設定
    ├─ state.js                # Save 結構、版本正規化、數值防呆與物品數量
-   ├─ storage.js              # localStorage 讀寫、V1/V2/V3→V4 migration 與清除
+   ├─ storage.js              # localStorage 讀寫、備份復原、版本 migration 與清除
    ├─ battle.js               # 純記憶體回合制 Battle Engine 與批量行動
    ├─ components.js           # 共用戰鬥與食物商品 Visual Component
    ├─ shop.js                 # 養成商店、戰鬥商店、批量購買與點數檢查
@@ -65,7 +66,7 @@ https://<GitHub帳號>.github.io/<repository名稱>/?debug=1
    ├─ jellyfish.js            # Skin、場景、配件與角色素材組裝
    ├─ collection.js           # 8 款水母圖鑑進度
    ├─ ui.js                   # Render、快速餵食面板、戰鬥畫面、Toast、Modal 與 Debug 面板
-   └─ analytics.js            # trackEvent 預留介面
+   └─ analytics.js            # 統一事件 Adapter、debug 標記與首次互動追蹤
 ```
 
 ## V1 功能保留
@@ -253,9 +254,19 @@ https://<GitHub帳號>.github.io/<repository名稱>/?debug=1
 - 配件新增 `asset` 預留欄位，圖片優先、emoji 作為 fallback；既有拖曳、旋轉、縮放與保存邏輯不變。
 - 本版不變更 Save Schema，`GAME_CONFIG.version` 維持 `6`。
 
+### V2.18.0 回訪驗證版
+
+- Save Schema 提升至 `version: 7`，保留既有資料；正常寫入會留下上一份有效備份，偵測到損壞 JSON 時會保存損壞內容並嘗試復原，寫入失敗會顯示可理解的提示。
+- 首頁新增「今日陪伴」卡片：每天固定一個「摸摸」或「聊天」目標，完成一次取得 100 點；本週完成四個不同日期後再取得一次 300 點。日期採裝置的本地日期，屬於回訪測試機制，不是安全的真實獎勵。
+- 水母達到 LV10 後，背包與快速餵食都會阻止消耗食物；一次跨多級時改用單一升級摘要 Modal 顯示到達的等級與目前階段。
+- 商店與 Battle 數量調整採局部更新，保留輸入焦點；主要按鈕、數量控制、配件工具列與 Battle 操作符合至少 44px 的觸控尺寸。
+- Battle 武器每個玩家回合最多使用 1 個；Boss 回合前顯示即將施放的攻擊，離開進行中的戰鬥會先警告並由玩家決定。
+- `analytics.js` 提供統一事件 Adapter，記錄至 console 與記憶體陣列；支援 `?debug=1` 標記與首次有效互動事件，尚未連接後端分析服務。
+- `assets/jellyfish-3d/*.webp` 已轉為實際 WebP，保留相同像素與透明度；GitHub Actions 部署前會執行所有 JavaScript 語法檢查與 `tools/v2-18-regression.mjs`。
+
 ## Save Migration 做法
 
-`GAME_CONFIG.version` 目前為 `6`。`storage.js` 讀取既有 `jellyLabSave` 後交由 `normalizeSave()` 正規化：
+`GAME_CONFIG.version` 目前為 `7`。`storage.js` 讀取既有 `jellyLabSave` 後交由 `normalizeSave()` 正規化：
 
 1. 保留舊玩家的 points、LV、EXP、親密度、裝備、背包、圖鑑與每日資料。
 2. 缺少的 `jellyfish.baseColor` 自動補為 `yellow`，保留原本 `equippedSkin`。
@@ -265,8 +276,10 @@ https://<GitHub帳號>.github.io/<repository名稱>/?debug=1
 6. 缺少 `jellyfish.equippedAccessories` 時，若存在舊的單一 `equippedAccessory` 就轉成一件配件陣列；現在不再依 `slot` 過濾，因此同類型配件也能並存。
 7. 缺少 `jellyfish.accessoryPositions` 時，依 `config.js` 每件配件的 `defaultPosition` 補齊；既有合法 X／Y 會保留並限制在 4～96%。
 8. V5 配件位置缺少 `rotation`／`scale` 時，依各配件預設值補齊；旋轉限制為 ±180°，大小限制為 0.6～1.6 倍。
-9. 版本不是 6 或缺少自由配件欄位時，將正規化結果回寫 localStorage；不會因升級主動清除舊存檔。
+9. 版本不是 7 或缺少自由配件／今日陪伴欄位時，將正規化結果回寫 localStorage；不會因升級主動清除舊存檔。
 10. 新建立的 Save 與 Reset Save 走 `createDefaultSave()`，使用 50,000 點並保存選定的 `baseColor`；既有 Save 的 points 不會被自動改寫。
+11. V2.18 新增的 `daily.companionGoal*` 與 `weekly.*` 欄位會在缺少時補上；每週只依不同本地日期計算，不會因同一天重複操作而重複發獎。
+12. 主存檔損壞時會將原始內容保存至 `jellyLabSaveCorrupted`，並優先嘗試 `jellyLabSaveBackup`；兩者都不可用時保留損壞內容並回到新遊戲流程。
 
 Battle 中的 HP、Boss HP、狀態、回合、Battle Log 都只存在 `battle.js` 的記憶體狀態，離開或 Refresh 即結束該場戰鬥，不會污染養成系統資料。
 
@@ -304,7 +317,7 @@ Battle 中的 HP、Boss HP、狀態、回合、Battle Log 都只存在 `battle.j
 
 ## 尚未完成功能
 
-以下刻意留在後續版本：正式會員登入、後端 API、正式 Coupon API、真實 Coupon Code、金流、排行榜、每日／每週 Boss、多 Boss、Boss 正式美術、音效、戰鬥中斷後續戰、多裝置同步、小遊戲與家具系統。
+以下刻意留在後續版本：正式會員登入、後端 API、正式 Coupon API、真實 Coupon Code、金流、排行榜、每日／每週 Boss、多 Boss、Boss 正式美術、音效、戰鬥中斷後續戰、多裝置同步、小遊戲與家具系統。今日陪伴的點數仍是前端測試點數，不可當作真實 Coupon 或折價承諾。
 
 ## 測試結果
 
@@ -383,3 +396,10 @@ Battle 中的 HP、Boss HP、狀態、回合、Battle Log 都只存在 `battle.j
 | V2.16：320px 快速餵食面板無橫向 Scroll | 通過；有庫存與無庫存面板均為 `scrollWidth = 320px`，面板右界 300px |
 | V2.16：背包原本單份餵食流程、快速連點與瀏覽器錯誤 Log | 通過；背包確認視窗仍可開啟，雙擊只餵食一次，兩個本機測試頁均無 error |
 | V2.16.1：快速餵食切換食物／調整數量不重跳面板 | 通過；切換後仍停留首頁，數量輸入焦點保持在原輸入框，實際餵食後才更新首頁 |
+| V2.18：Save Schema 7、有效備份、損壞存檔復原與寫入失敗提示 | 通過；`node tools/v2-18-regression.mjs` |
+| V2.18：LV10 餵食拒絕且不消耗食物、跨級升級摘要 | 通過；核心狀態回歸檢查 |
+| V2.18：每日陪伴一次獎勵、同日冪等、四個不同日期週獎勵 | 通過；每日 100 點、每週 300 點且不重複發放 |
+| V2.18：Battle 武器每回合最多 1 個、Boss 攻擊預告與離開警告 | 通過；Battle Engine 與本機瀏覽器流程檢查 |
+| V2.18：15 個角色素材為實際透明 WebP，PNG fallback 路徑存在 | 通過；像素與尺寸和轉檔前相同，總位元組減少 36.69% |
+| V2.18：320／375／390／430px 首頁、快速餵食、商店、圖鑑、Battle、Modal 與配件編輯器 | 通過；主要控制項皆可操作，無頁面橫向溢位，配件工具列點擊區約 44px |
+| V2.18：所有 JavaScript 語法、核心回歸與 GitHub Pages 部署前 gate | 通過；`.github/workflows/pages.yml` 已加入檢查步驟 |

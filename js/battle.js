@@ -3,11 +3,11 @@ import {
   BATTLE_SHOP_ITEMS,
   QUANTITY_CONFIG,
   REWARDS_CONFIG
-} from "./config.js?v=2.17.0";
+} from "./config.js?v=2.18.0";
 import {
   consumeBattleItem,
   getBattleItemQuantity
-} from "./state.js?v=2.17.0";
+} from "./state.js?v=2.18.0";
 
 const WEAPON_TYPES = new Set(["weapon"]);
 const BATTLE_ITEM_TYPES = new Set(["weapon", "recovery", "ointment"]);
@@ -37,6 +37,10 @@ function getBattleItem(itemId) {
   return BATTLE_SHOP_ITEMS.find((item) => item.id === itemId || item.storageKey === itemId) || null;
 }
 
+function getBossAttackById(bossId, attackId) {
+  return getBossConfig(bossId).attacks.find((attack) => attack.id === attackId) || null;
+}
+
 function integerQuantity(value) {
   const number = Number(value);
   return Number.isFinite(number) ? Math.floor(number) : 0;
@@ -53,7 +57,7 @@ export function getBattleActionQuantityLimits(battle, save, itemOrId) {
   if (item.type === "weapon") {
     return {
       min: 1,
-      max: Math.min(QUANTITY_CONFIG.max, available),
+      max: Math.min(1, available),
       available
     };
   }
@@ -117,6 +121,7 @@ export function createBattleState(bossId = "agingMonster") {
     log: ["戰鬥開始！", `${boss.name}出現了。`],
     lastAnimation: "",
     lastEffect: null,
+    nextBossAttackId: null,
     outcomeRecorded: false
   };
 }
@@ -142,7 +147,7 @@ function applyPlayerDamage(battle, amount) {
   return damage;
 }
 
-function resolvePlayerAfterAction(battle, save, events) {
+function resolvePlayerAfterAction(battle, save, events, randomFn = Math.random) {
   const name = playerName(save);
 
   if (battle.boss.hp <= 0) {
@@ -151,6 +156,7 @@ function resolvePlayerAfterAction(battle, save, events) {
     battle.actionLocked = false;
     battle.lastAnimation = "boss-defeated";
     battle.lastEffect = { target: "boss", type: "damage", amount: 0 };
+    battle.nextBossAttackId = null;
     appendBattleLog(battle, `${battle.boss.name}被擊敗了！`);
     return;
   }
@@ -171,6 +177,7 @@ function resolvePlayerAfterAction(battle, save, events) {
 
   battle.phase = "boss";
   battle.lastAnimation = "boss-turn";
+  battle.nextBossAttackId = chooseBossAttack(getBossConfig(battle.bossId), randomFn).id;
 }
 
 export function beginPlayerAction(battle, save, actionId, quantityOrRandom = 1, randomFn = Math.random) {
@@ -274,7 +281,7 @@ export function beginPlayerAction(battle, save, actionId, quantityOrRandom = 1, 
     battle.lastEffect = { target: "player", type: "cure", amount: 0 };
   }
 
-  resolvePlayerAfterAction(battle, save, events);
+  resolvePlayerAfterAction(battle, save, events, randomFn);
   return { ok: true, events, phase: battle.phase };
 }
 
@@ -299,7 +306,8 @@ export function resolveBossTurn(battle, save, randomFn = Math.random) {
 
   battle.actionLocked = true;
   const events = [];
-  const attack = chooseBossAttack(getBossConfig(battle.bossId), randomFn);
+  const attack = getBossAttackById(battle.bossId, battle.nextBossAttackId) || chooseBossAttack(getBossConfig(battle.bossId), randomFn);
+  battle.nextBossAttackId = null;
   const name = playerName(save);
 
   appendBattleLog(battle, `${battle.boss.name}使用${attack.name}！`);
@@ -481,6 +489,11 @@ export function resetBossReward(save) {
 
 export function getBossForDisplay(bossId = "agingMonster") {
   return getBossConfig(bossId);
+}
+
+export function getBossAttackPreview(battle) {
+  if (!battle || battle.phase !== "boss") return null;
+  return getBossAttackById(battle.bossId, battle.nextBossAttackId);
 }
 
 export function getBattleItemForDisplay(itemId) {

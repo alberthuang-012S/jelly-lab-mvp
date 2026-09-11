@@ -7,15 +7,16 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
 
 const {
+  ACCESSORY_LAYOUT_CONFIG,
   BATTLE_SHOP_ITEMS,
   GAME_CONFIG,
   JELLYFISH_COLORS,
   SKINS
-} = await import("../js/config.js?v=2.18.0");
-const state = await import("../js/state.js?v=2.18.0");
-const inventory = await import("../js/inventory.js?v=2.18.0");
-const battle = await import("../js/battle.js?v=2.18.0");
-const jellyfish = await import("../js/jellyfish.js?v=2.18.0");
+} = await import("../js/config.js?v=2.18.1");
+const state = await import("../js/state.js?v=2.18.1");
+const inventory = await import("../js/inventory.js?v=2.18.1");
+const battle = await import("../js/battle.js?v=2.18.1");
+const jellyfish = await import("../js/jellyfish.js?v=2.18.1");
 
 class MemoryStorage {
   constructor() {
@@ -53,7 +54,7 @@ globalThis.window = {
   __jellyLabSaveNotices: [],
   dispatchEvent() {}
 };
-const saveStorage = await import("../js/storage.js?v=2.18.0");
+const saveStorage = await import("../js/storage.js?v=2.18.1");
 
 function resetStorage() {
   storage.clear();
@@ -170,6 +171,13 @@ const firstReward = battle.claimBossReward(battleSave);
 assert.equal(firstReward.ok, true);
 assert.equal(battle.claimBossReward(battleSave).ok, false);
 
+// Accessory layout: legacy coordinates remain valid and the editor accepts the full stage.
+const accessorySave = state.createDefaultSave("配件範圍測試");
+state.setAccessoryPosition(accessorySave, "accessory_crown", { x: 100, y: 0, rotation: 0, scale: 1 });
+assert.deepEqual(state.getAccessoryPosition(accessorySave, "accessory_crown"), { x: 100, y: 0, rotation: 0, scale: 1 });
+state.setAccessoryPosition(accessorySave, "accessory_crown", { x: -10, y: 120, rotation: 0, scale: 1 });
+assert.deepEqual(state.getAccessoryPosition(accessorySave, "accessory_crown"), { x: 0, y: 100, rotation: 0, scale: 1 });
+
 // Asset existence and actual WebP signatures.
 const activeAssets = [
   ...JELLYFISH_COLORS.map((color) => `assets/jellyfish-3d/jelly-normal-${color.id}.webp`),
@@ -188,9 +196,15 @@ for (const file of allWebp) {
   assert.equal(bytes.subarray(8, 12).toString("ascii"), "WEBP", `${file} WEBP signature`);
 }
 
-assert.match(read("index.html"), /V2\.18\.0/);
-assert.match(read("js/config.js"), /productVersion: "2\.18\.0"/);
+assert.equal(ACCESSORY_LAYOUT_CONFIG.minX, 0);
+assert.equal(ACCESSORY_LAYOUT_CONFIG.maxX, 100);
+assert.equal(ACCESSORY_LAYOUT_CONFIG.minY, 0);
+assert.equal(ACCESSORY_LAYOUT_CONFIG.maxY, 100);
+assert.match(read("index.html"), /V2\.18\.1/);
+assert.match(read("js/config.js"), /productVersion: "2\.18\.1"/);
+assert.match(read("js/ui.js"), /accessory-transform-toolbar/);
+assert.doesNotMatch(read("js/jellyfish.js"), /accessory-floating-toolbar/);
 for (const match of read("index.html").matchAll(/(?:href|src)="(\.\/[^"?]+)(?:\?[^\"]+)?"/g)) {
   assert.equal(fs.existsSync(path.join(root, match[1])), true, `index reference ${match[1]}`);
 }
-console.log("Jelly Lab V2.18 regression PASS");
+console.log("Jelly Lab V2.18.1 regression PASS");

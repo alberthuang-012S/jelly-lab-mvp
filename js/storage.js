@@ -1,5 +1,5 @@
-import { GAME_CONFIG } from "./config.js?v=2.18.0";
-import { createDefaultSave, normalizeSave, applyDailyReset } from "./state.js?v=2.18.0";
+import { GAME_CONFIG } from "./config.js?v=2.18.1";
+import { createDefaultSave, normalizeSave, applyDailyReset } from "./state.js?v=2.18.1";
 
 function getNoticeQueue() {
   if (typeof window === "undefined") return null;

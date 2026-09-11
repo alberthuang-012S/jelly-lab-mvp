@@ -11,7 +11,7 @@ import {
   REWARDS_CONFIG,
   SCENES,
   SKINS
-} from "./config.js?v=2.18.0";
+} from "./config.js?v=2.18.1";
 
 function integerOr(value, fallback = 0) {
   const number = Number(value);

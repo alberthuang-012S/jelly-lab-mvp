@@ -1,6 +1,6 @@
-# 水母養成所 Jelly Lab V2.18.0
+# 水母養成所 Jelly Lab V2.18.1
 
-Jelly Lab V2.18.0 在既有水母養成、戰鬥、快速餵食與自由配件配置上，加入「今日陪伴」與本週累積回訪循環，並補強 Save 安全、LV10 餵食防呆、Battle 提示、手機操作與事件追蹤。專案仍使用 HTML5、CSS3、Vanilla JavaScript 與 `localStorage`，不需要後端、帳號或 npm 依賴即可遊玩；目前 50,000 點起始值只供內部測試。
+Jelly Lab V2.18.1 延續 V2.18.0 的每日陪伴、每週回訪、Save 安全、Battle 提示與手機操作，修正配件編輯範圍、工具列跳動與水藍色初始素材。專案仍使用 HTML5、CSS3、Vanilla JavaScript 與 `localStorage`，不需要後端、帳號或 npm 依賴即可遊玩；目前 50,000 點起始值只供內部測試。
 
 V2.17.0 的預渲染 3D 公仔素材層在本版改為真正的透明 WebP 檔案，角色會優先尋找 `assets/jellyfish-3d/`，素材失敗時回退至既有 PNG；Save 結構、養成、商店、戰鬥、背包、場景與配件拖曳資料均維持相容。
 
@@ -264,6 +264,12 @@ https://<GitHub帳號>.github.io/<repository名稱>/?debug=1
 - `analytics.js` 提供統一事件 Adapter，記錄至 console 與記憶體陣列；支援 `?debug=1` 標記與首次有效互動事件，尚未連接後端分析服務。
 - `assets/jellyfish-3d/*.webp` 已轉為實際 WebP，保留相同像素與透明度；GitHub Actions 部署前會執行所有 JavaScript 語法檢查與 `tools/v2-18-regression.mjs`。
 
+### V2.18.1 配件與水藍色修正版
+
+- 配件 X／Y 可移動範圍由 4～96% 擴大為 0～100%，保留既有 Save 座標與拖曳、Touch Gesture、縮放、旋轉功能。
+- 旋轉／縮放工具列固定在配件說明卡下方，不再跟著配件在舞台內跳位；按鈕加入「左轉／右轉／縮小／放大／重設」文字，並保留至少 44px 觸控區。
+- 水藍色初始水母改用正確的 aqua WebP 素材；PNG fallback 的色相同步調整。
+
 ## Save Migration 做法
 
 `GAME_CONFIG.version` 目前為 `7`。`storage.js` 讀取既有 `jellyLabSave` 後交由 `normalizeSave()` 正規化：
@@ -403,3 +409,6 @@ Battle 中的 HP、Boss HP、狀態、回合、Battle Log 都只存在 `battle.j
 | V2.18：15 個角色素材為實際透明 WebP，PNG fallback 路徑存在 | 通過；像素與尺寸和轉檔前相同，總位元組減少 36.69% |
 | V2.18：320／375／390／430px 首頁、快速餵食、商店、圖鑑、Battle、Modal 與配件編輯器 | 通過；主要控制項皆可操作，無頁面橫向溢位，配件工具列點擊區約 44px |
 | V2.18：所有 JavaScript 語法、核心回歸與 GitHub Pages 部署前 gate | 通過；`.github/workflows/pages.yml` 已加入檢查步驟 |
+| V2.18.1：配件可移動範圍 0～100%、邊界夾限與舊座標相容 | 通過；`node tools/v2-18-regression.mjs` 驗證 0／100% 與超出邊界夾限 |
+| V2.18.1：固定配件工具列、文字操作標籤與 320／375／390／430px 版面 | 通過；瀏覽器實測工具列固定於說明卡下方，5 個按鈕保持 52px 高且無橫向溢位 |
+| V2.18.1：水藍色初始角色與素材快取更新 | 通過；選擇水藍後載入 `jelly-normal-cyan.webp?v=2.18.1`，實際顯示水藍色 |

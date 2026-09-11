@@ -1,5 +1,5 @@
 export const GAME_CONFIG = {
-  productVersion: "2.18.0",
+  productVersion: "2.18.1",
   version: 7,
   saveKey: "jellyLabSave",
   backupSaveKey: "jellyLabSaveBackup",
@@ -93,7 +93,7 @@ export const JELLYFISH_COLORS = [
     name: "水藍色",
     shortName: "水藍",
     color: "#55CFE0",
-    hueRotate: "120deg",
+    hueRotate: "145deg",
     saturation: "1.08"
   },
   {
@@ -287,10 +287,10 @@ export const ACCESSORY_SLOTS = {
 };
 
 export const ACCESSORY_LAYOUT_CONFIG = {
-  minX: 4,
-  maxX: 96,
-  minY: 4,
-  maxY: 96,
+  minX: 0,
+  maxX: 100,
+  minY: 0,
+  maxY: 100,
   minScale: 0.6,
   maxScale: 1.6,
   scaleStep: 0.05,

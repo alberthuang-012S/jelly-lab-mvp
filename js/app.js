@@ -10,11 +10,11 @@ import {
   QUANTITY_CONFIG,
   SCENES,
   SKINS
-} from "./config.js?v=2.18.0";
-import { startSession, trackEvent, trackFirstMeaningfulInteraction } from "./analytics.js?v=2.18.0";
-import { feedFood, getInventoryItems } from "./inventory.js?v=2.18.0";
-import { getScene } from "./jellyfish.js?v=2.18.0";
-import { getItemStatus, purchaseItem, getShopItems } from "./shop.js?v=2.18.0";
+} from "./config.js?v=2.18.1";
+import { startSession, trackEvent, trackFirstMeaningfulInteraction } from "./analytics.js?v=2.18.1";
+import { feedFood, getInventoryItems } from "./inventory.js?v=2.18.1";
+import { getScene } from "./jellyfish.js?v=2.18.1";
+import { getItemStatus, purchaseItem, getShopItems } from "./shop.js?v=2.18.1";
 import {
   addBattleItem,
   addExp,
@@ -37,7 +37,7 @@ import {
   petJellyfish,
   setAccessoryPosition,
   unequipAccessory
-} from "./state.js?v=2.18.0";
+} from "./state.js?v=2.18.1";
 import {
   beginPlayerAction,
   claimBossReward,
@@ -51,8 +51,8 @@ import {
   recordBossVictory,
   resetBossReward,
   resolveBossTurn
-} from "./battle.js?v=2.18.0";
-import { clearSave, createAndPersistSave, loadSave, persistSave } from "./storage.js?v=2.18.0";
+} from "./battle.js?v=2.18.1";
+import { clearSave, createAndPersistSave, loadSave, persistSave } from "./storage.js?v=2.18.1";
 import {
   closeModal,
   escapeHtml,
@@ -74,8 +74,8 @@ import {
   showToast,
   showLevelUpSummaryModal,
   updateHeader
-} from "./ui.js?v=2.18.0";
-import { renderFoodVisual } from "./components.js?v=2.18.0";
+} from "./ui.js?v=2.18.1";
+import { renderFoodVisual } from "./components.js?v=2.18.1";
 
 let save = loadSave();
 let currentView = "home";
@@ -465,75 +465,11 @@ function snapAccessoryRotation(value) {
 }
 
 function positionAccessoryToolbar() {
-  const toolbar = document.querySelector("#jelly-display [data-accessory-toolbar]");
+  const toolbar = document.querySelector("#view-home [data-accessory-toolbar]");
   if (!toolbar || !selectedAccessoryId || accessoryGesture) return;
 
-  const layer = toolbar.closest(".jelly-accessory-layer");
-  const target = layer?.querySelector(`.jelly-accessory[data-accessory-id="${selectedAccessoryId}"]`);
-  if (!layer || !target) return;
-
-  const layerRect = layer.getBoundingClientRect();
-  const layerScaleX = layer.offsetWidth ? layerRect.width / layer.offsetWidth : 1;
-  const layerScaleY = layer.offsetHeight ? layerRect.height / layer.offsetHeight : 1;
-  const boundaryRect = layer.closest("#jelly-stage")?.getBoundingClientRect() || layerRect;
-  const targetRect = target.getBoundingClientRect();
-  const toolbarRect = toolbar.getBoundingClientRect();
-  if (!layerRect.width || !layerRect.height || !toolbarRect.width || !toolbarRect.height) return;
-
-  const padding = 6;
-  const gap = 8;
-  const centerX = targetRect.left + targetRect.width / 2;
-  const centerY = targetRect.top + targetRect.height / 2;
-  const baseCandidates = [
-    { placement: "right", left: targetRect.right + gap, top: centerY - toolbarRect.height / 2 },
-    { placement: "left", left: targetRect.left - toolbarRect.width - gap, top: centerY - toolbarRect.height / 2 },
-    { placement: "below", left: centerX - toolbarRect.width / 2, top: targetRect.bottom + gap },
-    { placement: "above", left: centerX - toolbarRect.width / 2, top: targetRect.top - toolbarRect.height - gap }
-  ];
-  const perpendicularOffsets = [0, 24, -24, 48, -48, 72, -72, 96, -96, 120, -120];
-  const primaryOffsets = [0, 24, -24, 48, -48, 72, -72, 96, -96];
-  const candidates = baseCandidates.flatMap((base) => {
-    const isHorizontal = base.placement === "right" || base.placement === "left";
-    const items = [];
-    const addCandidate = (perpendicularOffset, primaryOffset = 0) => {
-      const horizontalPrimary = base.placement === "right" ? primaryOffset : base.placement === "left" ? -primaryOffset : 0;
-      const verticalPrimary = base.placement === "below" ? primaryOffset : base.placement === "above" ? -primaryOffset : 0;
-      items.push({
-        placement: base.placement,
-        left: base.left + (isHorizontal ? horizontalPrimary : perpendicularOffset),
-        top: base.top + (isHorizontal ? perpendicularOffset : verticalPrimary)
-      });
-    };
-
-    perpendicularOffsets.forEach((offset) => addCandidate(offset));
-    primaryOffsets.slice(1).forEach((offset) => {
-      addCandidate(0, offset);
-      addCandidate(24, offset);
-      addCandidate(-24, offset);
-    });
-    return items;
-  });
-  const fits = ({ left, top }) => {
-    return left >= boundaryRect.left + padding
-      && top >= boundaryRect.top + padding
-      && left + toolbarRect.width <= boundaryRect.right - padding
-      && top + toolbarRect.height <= boundaryRect.bottom - padding;
-  };
-  const accessoryRects = [...layer.querySelectorAll(".jelly-accessory.is-draggable")]
-    .map((accessory) => accessory.getBoundingClientRect());
-  const avoidsAccessories = ({ left, top }) => {
-    const right = left + toolbarRect.width;
-    const bottom = top + toolbarRect.height;
-    return accessoryRects.every((rect) => right < rect.left - gap || left > rect.right + gap || bottom < rect.top - gap || top > rect.bottom + gap);
-  };
-  const candidate = candidates.find((item) => fits(item) && avoidsAccessories(item)) || candidates.find(fits) || candidates[2];
-  const pageLeft = clampAccessoryCoordinate(candidate.left, boundaryRect.left + padding, Math.max(boundaryRect.left + padding, boundaryRect.right - toolbarRect.width - padding));
-  const pageTop = clampAccessoryCoordinate(candidate.top, boundaryRect.top + padding, Math.max(boundaryRect.top + padding, boundaryRect.bottom - toolbarRect.height - padding));
-
-  toolbar.style.left = `${(pageLeft - layerRect.left) / layerScaleX}px`;
-  toolbar.style.top = `${(pageTop - layerRect.top) / layerScaleY}px`;
-  toolbar.dataset.placement = candidate.placement;
-  toolbar.classList.add("is-positioned");
+  toolbar.dataset.accessoryId = selectedAccessoryId;
+  toolbar.dataset.placement = "below-stage";
 }
 
 function scheduleAccessoryToolbarPosition() {
@@ -550,7 +486,7 @@ function applyAccessoryTransformToDom(target, transform) {
   target.style.setProperty("--accessory-rotation", `${transform.rotation}deg`);
   target.style.setProperty("--accessory-scale", transform.scale);
 
-  const readout = document.querySelector("[data-accessory-transform-readout]");
+  const readout = document.querySelector("#view-home [data-accessory-transform-readout]");
   if (readout) readout.textContent = `${Math.round(transform.rotation)}° · ${Number(transform.scale).toFixed(2)}×`;
 }
 
@@ -577,11 +513,11 @@ function selectAccessory(accessoryId) {
   });
 
   const accessory = ACCESSORIES.find((item) => item.id === accessoryId);
-  const toolbar = document.querySelector("#jelly-display [data-accessory-toolbar]");
+  const toolbar = document.querySelector("#view-home [data-accessory-toolbar]");
   if (toolbar && accessory) {
     toolbar.dataset.accessoryId = accessoryId;
     toolbar.setAttribute("aria-label", `調整${accessory.name}`);
-    toolbar.classList.remove("is-positioned");
+    toolbar.querySelector("[data-accessory-toolbar-name]")?.replaceChildren(document.createTextNode(accessory.name));
   }
   if (accessory) {
     const target = document.querySelector(`#jelly-display .jelly-accessory[data-accessory-id="${accessoryId}"]`);
@@ -621,7 +557,7 @@ function handleAccessoryPointerDown(event) {
       pointers: new Map(),
       currentTransform: getAccessoryPosition(save, accessoryId),
       frameId: null,
-      needsToolbarRender: !document.querySelector("#jelly-display [data-accessory-toolbar]")
+      needsToolbarRender: !document.querySelector("#view-home [data-accessory-toolbar]")
     };
     coordinateLayer.classList.add("is-accessory-gesturing");
   }

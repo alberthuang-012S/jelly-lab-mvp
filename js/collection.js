@@ -1,4 +1,4 @@
-import { SKINS } from "./config.js?v=2.18.0";
+import { SKINS } from "./config.js?v=2.18.1";
 
 export function getCollectionProgress(save) {
   const owned = SKINS.filter((skin) => save.collection.skins.includes(skin.id)).length;

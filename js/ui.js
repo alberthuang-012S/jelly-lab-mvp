@@ -1,4 +1,6 @@
 import {
+  ACCESSORIES,
+  ACCESSORY_LAYOUT_CONFIG,
   BATTLE_CONFIG,
   BATTLE_SHOP_GROUPS,
   BATTLE_SHOP_ITEMS,
@@ -10,14 +12,14 @@ import {
   REWARDS_CONFIG,
   SHOP_CATEGORIES,
   SKINS
-} from "./config.js?v=2.18.0";
-import { getCollectionProgress, isCollected } from "./collection.js?v=2.18.0";
-import { getBattleInventorySummary, getInventoryItems, getRewardItems } from "./inventory.js?v=2.18.0";
-import { getBattleItemQuantity, getExpRequired, getFoodQuantity, getCurrentStage, getDailyCompanionGoal, getNextStage, getStageProgress, getEquippedAccessories, getWeeklyCompanionProgress } from "./state.js?v=2.18.0";
-import { renderAccessoryVisual, renderJellyfish, renderJellyfishPreview, getScene, getSkin } from "./jellyfish.js?v=2.18.0";
-import { getItemStatus, getShopItems, isEquipped, isRepeatableItem } from "./shop.js?v=2.18.0";
-import { getBattleActionQuantityLimits, getBossAttackPreview, getBossForDisplay } from "./battle.js?v=2.18.0";
-import { renderBattleItemVisual, renderFoodVisual } from "./components.js?v=2.18.0";
+} from "./config.js?v=2.18.1";
+import { getCollectionProgress, isCollected } from "./collection.js?v=2.18.1";
+import { getBattleInventorySummary, getInventoryItems, getRewardItems } from "./inventory.js?v=2.18.1";
+import { getBattleItemQuantity, getExpRequired, getFoodQuantity, getCurrentStage, getDailyCompanionGoal, getNextStage, getStageProgress, getAccessoryPosition, getEquippedAccessories, getWeeklyCompanionProgress } from "./state.js?v=2.18.1";
+import { renderAccessoryVisual, renderJellyfish, renderJellyfishPreview, getScene, getSkin } from "./jellyfish.js?v=2.18.1";
+import { getItemStatus, getShopItems, isEquipped, isRepeatableItem } from "./shop.js?v=2.18.1";
+import { getBattleActionQuantityLimits, getBossAttackPreview, getBossForDisplay } from "./battle.js?v=2.18.1";
+import { renderBattleItemVisual, renderFoodVisual } from "./components.js?v=2.18.1";
 
 export function escapeHtml(value) {
   return String(value)
@@ -116,7 +118,7 @@ function renderCompanionCard(save) {
   `;
 }
 
-function renderAccessoryLayoutControls(save, accessoryEditMode = false) {
+function renderAccessoryLayoutControls(save, accessoryEditMode = false, selectedAccessoryId = null) {
   const equippedIds = getEquippedAccessories(save);
   const equippedCount = equippedIds.length;
 
@@ -129,12 +131,31 @@ function renderAccessoryLayoutControls(save, accessoryEditMode = false) {
     `;
   }
 
+  const selectedAccessory = ACCESSORIES.find((accessory) => accessory.id === selectedAccessoryId) || ACCESSORIES.find((accessory) => accessory.id === equippedIds[0]) || null;
+  const selectedPosition = selectedAccessory ? getAccessoryPosition(save, selectedAccessory.id) : null;
+  const toolbar = accessoryEditMode && selectedAccessory && selectedPosition ? `
+    <div class="accessory-transform-toolbar" data-accessory-toolbar data-accessory-id="${selectedAccessory.id}" role="toolbar" aria-label="調整${selectedAccessory.name}">
+      <div class="accessory-transform-heading">
+        <div><span class="card-kicker">CURRENT ACCESSORY</span><strong data-accessory-toolbar-name>${escapeHtml(selectedAccessory.name)}</strong></div>
+        <output class="accessory-toolbar-readout" data-accessory-transform-readout aria-live="polite">${Math.round(Number(selectedPosition.rotation ?? 0))}° · ${Number(selectedPosition.scale ?? 1).toFixed(2)}×</output>
+      </div>
+      <div class="accessory-toolbar-actions">
+        <button type="button" data-action="adjust-accessory-transform" data-transform="rotation" data-delta="-${ACCESSORY_LAYOUT_CONFIG.rotationStep}" aria-label="向左旋轉 ${ACCESSORY_LAYOUT_CONFIG.rotationStep} 度"><span class="accessory-toolbar-icon" aria-hidden="true">↶</span><span class="accessory-toolbar-label">左轉</span></button>
+        <button type="button" data-action="adjust-accessory-transform" data-transform="rotation" data-delta="${ACCESSORY_LAYOUT_CONFIG.rotationStep}" aria-label="向右旋轉 ${ACCESSORY_LAYOUT_CONFIG.rotationStep} 度"><span class="accessory-toolbar-icon" aria-hidden="true">↷</span><span class="accessory-toolbar-label">右轉</span></button>
+        <button type="button" data-action="adjust-accessory-transform" data-transform="scale" data-delta="-${ACCESSORY_LAYOUT_CONFIG.scaleStep}" aria-label="縮小配件"><span class="accessory-toolbar-icon" aria-hidden="true">−</span><span class="accessory-toolbar-label">縮小</span></button>
+        <button type="button" data-action="adjust-accessory-transform" data-transform="scale" data-delta="${ACCESSORY_LAYOUT_CONFIG.scaleStep}" aria-label="放大配件"><span class="accessory-toolbar-icon" aria-hidden="true">＋</span><span class="accessory-toolbar-label">放大</span></button>
+        <button type="button" data-action="reset-selected-accessory" aria-label="重設目前配件"><span class="accessory-toolbar-icon" aria-hidden="true">↺</span><span class="accessory-toolbar-label">重設</span></button>
+      </div>
+    </div>
+  ` : "";
+
   return `
     <section class="accessory-layout-card ${accessoryEditMode ? "is-editing" : ""}">
-      <div class="accessory-layout-copy"><span class="card-kicker">FREE ACCESSORY LAYOUT</span><strong>自由裝備 · ${equippedCount} 件</strong><p>${accessoryEditMode ? "點選配件，直接使用旁邊的工具列；也可單指移動、雙指縮放旋轉。" : "配件可以同時裝備，不同配件也能放在你喜歡的位置。"}</p></div>
+      <div class="accessory-layout-copy"><span class="card-kicker">FREE ACCESSORY LAYOUT</span><strong>自由裝備 · ${equippedCount} 件</strong><p>${accessoryEditMode ? "點選配件後使用下方工具列；也可單指移動、雙指縮放旋轉。" : "配件可以同時裝備，不同配件也能放在你喜歡的位置。"}</p></div>
       <div class="accessory-layout-actions">
         <button class="small-action ${accessoryEditMode ? "button-primary" : ""}" data-action="toggle-accessory-editor">${accessoryEditMode ? "完成調整" : "調整位置"}</button>
       </div>
+      ${toolbar}
     </section>
   `;
 }
@@ -263,7 +284,7 @@ export function renderHome(container, save, options = {}) {
           </div>
         </div>
 
-        ${renderAccessoryLayoutControls(save, accessoryEditMode)}
+        ${renderAccessoryLayoutControls(save, accessoryEditMode, selectedAccessoryId)}
 
         <div class="jelly-card-footer">
           <div>

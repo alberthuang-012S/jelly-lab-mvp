@@ -290,7 +290,7 @@
   }
 
   .accessory-toolbar-actions {
-    grid-template-columns: repeat(3, 49px);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .level-orb {

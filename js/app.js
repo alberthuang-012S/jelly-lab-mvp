@@ -10,11 +10,11 @@ import {
   QUANTITY_CONFIG,
   SCENES,
   SKINS
-} from "./config.js?v=2.18.1";
-import { startSession, trackEvent, trackFirstMeaningfulInteraction } from "./analytics.js?v=2.18.1";
-import { feedFood, getInventoryItems } from "./inventory.js?v=2.18.1";
-import { getScene } from "./jellyfish.js?v=2.18.1";
-import { getItemStatus, purchaseItem, getShopItems } from "./shop.js?v=2.18.1";
+} from "./config.js?v=2.18.2";
+import { startSession, trackEvent, trackFirstMeaningfulInteraction } from "./analytics.js?v=2.18.2";
+import { feedFood, getInventoryItems } from "./inventory.js?v=2.18.2";
+import { getScene } from "./jellyfish.js?v=2.18.2";
+import { getItemStatus, purchaseItem, getShopItems } from "./shop.js?v=2.18.2";
 import {
   addBattleItem,
   addExp,
@@ -37,7 +37,7 @@ import {
   petJellyfish,
   setAccessoryPosition,
   unequipAccessory
-} from "./state.js?v=2.18.1";
+} from "./state.js?v=2.18.2";
 import {
   beginPlayerAction,
   claimBossReward,
@@ -51,8 +51,8 @@ import {
   recordBossVictory,
   resetBossReward,
   resolveBossTurn
-} from "./battle.js?v=2.18.1";
-import { clearSave, createAndPersistSave, loadSave, persistSave } from "./storage.js?v=2.18.1";
+} from "./battle.js?v=2.18.2";
+import { clearSave, createAndPersistSave, loadSave, persistSave } from "./storage.js?v=2.18.2";
 import {
   closeModal,
   escapeHtml,
@@ -74,8 +74,8 @@ import {
   showToast,
   showLevelUpSummaryModal,
   updateHeader
-} from "./ui.js?v=2.18.1";
-import { renderFoodVisual } from "./components.js?v=2.18.1";
+} from "./ui.js?v=2.18.2";
+import { renderFoodVisual } from "./components.js?v=2.18.2";
 
 let save = loadSave();
 let currentView = "home";
@@ -673,7 +673,6 @@ function handleAccessoryPointerUp(event) {
       positionAccessoryToolbar();
       scheduleAccessoryToolbarPosition();
     }
-    showToast("配件位置、角度與大小已保存。", "success");
   }
 }
 

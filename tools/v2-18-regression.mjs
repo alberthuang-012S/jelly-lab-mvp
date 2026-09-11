@@ -12,11 +12,11 @@ const {
   GAME_CONFIG,
   JELLYFISH_COLORS,
   SKINS
-} = await import("../js/config.js?v=2.18.1");
-const state = await import("../js/state.js?v=2.18.1");
-const inventory = await import("../js/inventory.js?v=2.18.1");
-const battle = await import("../js/battle.js?v=2.18.1");
-const jellyfish = await import("../js/jellyfish.js?v=2.18.1");
+} = await import("../js/config.js?v=2.18.2");
+const state = await import("../js/state.js?v=2.18.2");
+const inventory = await import("../js/inventory.js?v=2.18.2");
+const battle = await import("../js/battle.js?v=2.18.2");
+const jellyfish = await import("../js/jellyfish.js?v=2.18.2");
 
 class MemoryStorage {
   constructor() {
@@ -54,7 +54,7 @@ globalThis.window = {
   __jellyLabSaveNotices: [],
   dispatchEvent() {}
 };
-const saveStorage = await import("../js/storage.js?v=2.18.1");
+const saveStorage = await import("../js/storage.js?v=2.18.2");
 
 function resetStorage() {
   storage.clear();
@@ -200,11 +200,14 @@ assert.equal(ACCESSORY_LAYOUT_CONFIG.minX, 0);
 assert.equal(ACCESSORY_LAYOUT_CONFIG.maxX, 100);
 assert.equal(ACCESSORY_LAYOUT_CONFIG.minY, 0);
 assert.equal(ACCESSORY_LAYOUT_CONFIG.maxY, 100);
-assert.match(read("index.html"), /V2\.18\.1/);
-assert.match(read("js/config.js"), /productVersion: "2\.18\.1"/);
+assert.match(read("index.html"), /V2\.18\.2/);
+assert.match(read("js/config.js"), /productVersion: "2\.18\.2"/);
 assert.match(read("js/ui.js"), /accessory-transform-toolbar/);
 assert.doesNotMatch(read("js/jellyfish.js"), /accessory-floating-toolbar/);
+assert.doesNotMatch(read("js/app.js"), /配件位置、角度與大小已保存/);
+assert.match(read("js/ui.js"), /querySelectorAll\("\.toast"\)/);
+assert.match(read("css/responsive.css"), /bottom: calc\(86px \+ env\(safe-area-inset-bottom\)\)/);
 for (const match of read("index.html").matchAll(/(?:href|src)="(\.\/[^"?]+)(?:\?[^\"]+)?"/g)) {
   assert.equal(fs.existsSync(path.join(root, match[1])), true, `index reference ${match[1]}`);
 }
-console.log("Jelly Lab V2.18.1 regression PASS");
+console.log("Jelly Lab V2.18.2 regression PASS");

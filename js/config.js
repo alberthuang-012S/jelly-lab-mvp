@@ -1,5 +1,5 @@
 export const GAME_CONFIG = {
-  productVersion: "2.18.1",
+  productVersion: "2.18.2",
   version: 7,
   saveKey: "jellyLabSave",
   backupSaveKey: "jellyLabSaveBackup",

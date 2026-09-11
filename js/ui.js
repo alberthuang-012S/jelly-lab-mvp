@@ -12,14 +12,14 @@ import {
   REWARDS_CONFIG,
   SHOP_CATEGORIES,
   SKINS
-} from "./config.js?v=2.18.1";
-import { getCollectionProgress, isCollected } from "./collection.js?v=2.18.1";
-import { getBattleInventorySummary, getInventoryItems, getRewardItems } from "./inventory.js?v=2.18.1";
-import { getBattleItemQuantity, getExpRequired, getFoodQuantity, getCurrentStage, getDailyCompanionGoal, getNextStage, getStageProgress, getAccessoryPosition, getEquippedAccessories, getWeeklyCompanionProgress } from "./state.js?v=2.18.1";
-import { renderAccessoryVisual, renderJellyfish, renderJellyfishPreview, getScene, getSkin } from "./jellyfish.js?v=2.18.1";
-import { getItemStatus, getShopItems, isEquipped, isRepeatableItem } from "./shop.js?v=2.18.1";
-import { getBattleActionQuantityLimits, getBossAttackPreview, getBossForDisplay } from "./battle.js?v=2.18.1";
-import { renderBattleItemVisual, renderFoodVisual } from "./components.js?v=2.18.1";
+} from "./config.js?v=2.18.2";
+import { getCollectionProgress, isCollected } from "./collection.js?v=2.18.2";
+import { getBattleInventorySummary, getInventoryItems, getRewardItems } from "./inventory.js?v=2.18.2";
+import { getBattleItemQuantity, getExpRequired, getFoodQuantity, getCurrentStage, getDailyCompanionGoal, getNextStage, getStageProgress, getAccessoryPosition, getEquippedAccessories, getWeeklyCompanionProgress } from "./state.js?v=2.18.2";
+import { renderAccessoryVisual, renderJellyfish, renderJellyfishPreview, getScene, getSkin } from "./jellyfish.js?v=2.18.2";
+import { getItemStatus, getShopItems, isEquipped, isRepeatableItem } from "./shop.js?v=2.18.2";
+import { getBattleActionQuantityLimits, getBossAttackPreview, getBossForDisplay } from "./battle.js?v=2.18.2";
+import { renderBattleItemVisual, renderFoodVisual } from "./components.js?v=2.18.2";
 
 export function escapeHtml(value) {
   return String(value)
@@ -839,6 +839,8 @@ export function updateHeader(save) {
 export function showToast(message, type = "info") {
   const region = document.querySelector("#toast-region");
   if (!region) return;
+
+  region.querySelectorAll(".toast").forEach((toast) => toast.remove());
 
   const toast = document.createElement("div");
   toast.className = `toast toast-${type}`;

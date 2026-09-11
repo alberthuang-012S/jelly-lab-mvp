@@ -1,6 +1,6 @@
-# 水母養成所 Jelly Lab V2.18.1
+# 水母養成所 Jelly Lab V2.18.2
 
-Jelly Lab V2.18.1 延續 V2.18.0 的每日陪伴、每週回訪、Save 安全、Battle 提示與手機操作，修正配件編輯範圍、工具列跳動與水藍色初始素材。專案仍使用 HTML5、CSS3、Vanilla JavaScript 與 `localStorage`，不需要後端、帳號或 npm 依賴即可遊玩；目前 50,000 點起始值只供內部測試。
+Jelly Lab V2.18.2 延續 V2.18.1 的配件編輯範圍、固定工具列與水藍色初始素材，收斂配件保存提示並改善手機 Toast 位置。專案仍使用 HTML5、CSS3、Vanilla JavaScript 與 `localStorage`，不需要後端、帳號或 npm 依賴即可遊玩；目前 50,000 點起始值只供內部測試。
 
 V2.17.0 的預渲染 3D 公仔素材層在本版改為真正的透明 WebP 檔案，角色會優先尋找 `assets/jellyfish-3d/`，素材失敗時回退至既有 PNG；Save 結構、養成、商店、戰鬥、背包、場景與配件拖曳資料均維持相容。
 
@@ -270,6 +270,12 @@ https://<GitHub帳號>.github.io/<repository名稱>/?debug=1
 - 旋轉／縮放工具列固定在配件說明卡下方，不再跟著配件在舞台內跳位；按鈕加入「左轉／右轉／縮小／放大／重設」文字，並保留至少 44px 觸控區。
 - 水藍色初始水母改用正確的 aqua WebP 素材；PNG fallback 的色相同步調整。
 
+### V2.18.2 配件提示修正版
+
+- 配件拖曳、縮放與旋轉完成後不再每次跳出保存 Toast；完成編輯時仍保留一次明確提示。
+- Toast 同時間只保留最新一則，避免快速操作堆疊多個相同提示。
+- 手機版 Toast 移到下方導覽列上方，並保留安全區距離，降低遮住主要畫面的機會。
+
 ## Save Migration 做法
 
 `GAME_CONFIG.version` 目前為 `7`。`storage.js` 讀取既有 `jellyLabSave` 後交由 `normalizeSave()` 正規化：
@@ -412,3 +418,4 @@ Battle 中的 HP、Boss HP、狀態、回合、Battle Log 都只存在 `battle.j
 | V2.18.1：配件可移動範圍 0～100%、邊界夾限與舊座標相容 | 通過；`node tools/v2-18-regression.mjs` 驗證 0／100% 與超出邊界夾限 |
 | V2.18.1：固定配件工具列、文字操作標籤與 320／375／390／430px 版面 | 通過；瀏覽器實測工具列固定於說明卡下方，5 個按鈕保持 52px 高且無橫向溢位 |
 | V2.18.1：水藍色初始角色與素材快取更新 | 通過；選擇水藍後載入 `jelly-normal-cyan.webp?v=2.18.1`，實際顯示水藍色 |
+| V2.18.2：配件保存提示不重複、Toast 單則顯示與手機避讓底部導覽 | 通過；配件手勢不再產生重複 Toast，手機版 Toast 位於底部導覽列上方 |

@@ -1,5 +1,5 @@
-import { ACCESSORIES, GAME_CONFIG, JELLYFISH_ASSET_CONFIG, JELLYFISH_COLORS, SCENES, SKINS } from "./config.js?v=2.18.1";
-import { getCurrentStage } from "./state.js?v=2.18.1";
+import { ACCESSORIES, GAME_CONFIG, JELLYFISH_ASSET_CONFIG, JELLYFISH_COLORS, SCENES, SKINS } from "./config.js?v=2.18.2";
+import { getCurrentStage } from "./state.js?v=2.18.2";
 
 export function getSkin(skinId) {
   return SKINS.find((skin) => skin.id === skinId) || SKINS[0];
